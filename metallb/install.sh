@@ -7,3 +7,8 @@ helm repo add metallb https://metallb.github.io/metallb
 helm install metallb metallb/metallb --create-namespace --namespace $namespace -f metallb/values-metallb.yaml
 
 # Configuration
+kubectl apply -f metallb/ip-pool-config.yaml
+
+# Verify created IP pool
+kubectl -n metallb get ipaddresspools.metallb.io
+kubectl -n metallb get l2advertisements.metallb.io
