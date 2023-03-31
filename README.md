@@ -11,4 +11,4 @@ Playground to test out some DevOps tools and ideas.
 - GitOps: ArgoCD.
 - Secret Management: Vault.
 - Service Mesh: (Consul or Istio)
-- Monitoring: Prometheus, AlertManager, Grafana
+- Monitoring: Rancher Monitoring (Prometheus, AlertManager, Grafana)
