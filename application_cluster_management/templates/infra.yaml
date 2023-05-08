@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: argo-cd
+  name: infra
   namespace: default
   finalizers:
   - resources-finalizer.argocd.argoproj.io
@@ -11,10 +11,16 @@ spec:
     server: https://kubernetes.default.svc
     namespace: argocd
   source:
-    path: charts/argocd
+    path: charts/infra
     repoURL: https://github.com/lamvng/home-lab.git
     targetRevision: HEAD
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
+
+
+  source:
+    repoURL: https://github.com/lamvng/home-lab.git
+    path: application_cluster_management/
+    targetRevision: HEAD
