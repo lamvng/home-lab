@@ -9,7 +9,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/lamvng/home-lab.git
-    path: application_cluster_management/
+    path: application-cluster-management/
     targetRevision: HEAD
   destination:
     server: https://kubernetes.default.svc
