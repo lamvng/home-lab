@@ -1,0 +1,9 @@
+apiVersion: v2
+name: homelab_cluster
+description: Necessary service to manage the K3S cluster
+type: application
+version: 1.0.0
+appVersion: 1.0.0
+maintainers:
+- name: lamvng
+  url: https://github.com/lamvng
