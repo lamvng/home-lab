@@ -15,6 +15,14 @@ Playground to test out some DevOps tools and ideas.
 
 # Setup
 
+## Argo CD
+
+After the initial installation, we need to set up the application. Declarative setup is used in this scenario.
+
+```
+helm template application_cluster_management/ | kubectl apply -f -
+```
+
 ## Local DNS entries
 
 Since this lab is not hosted on public servers and no public domain name is configured, Some entries are required in `/etc/hosts` and 

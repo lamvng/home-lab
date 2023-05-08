@@ -1,18 +1,19 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: root
+  name: cluster-management
   finalizers:
   - resources-finalizer.argocd.argoproj.io
+  namespace: argocd
 spec:
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: default
   project: default
   source:
-    path: applications/
     repoURL: https://github.com/lamvng/home-lab.git
+    path: application_cluster_management/
     targetRevision: HEAD
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
   syncPolicy:
     automated:
       prune: true
