@@ -2,7 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: infra
-  namespace: default
+  namespace: argocd
   finalizers:
   - resources-finalizer.argocd.argoproj.io
 spec:
@@ -18,9 +18,3 @@ spec:
     automated:
       prune: true
       selfHeal: true
-
-
-  source:
-    repoURL: https://github.com/lamvng/home-lab.git
-    path: application_cluster_management/
-    targetRevision: HEAD
