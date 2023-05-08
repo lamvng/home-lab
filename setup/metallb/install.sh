@@ -4,7 +4,7 @@ namespace=metallb
 helm repo add metallb https://metallb.github.io/metallb
 
 # Install Metallb through Helm
-helm install metallb metallb/metallb --create-namespace --namespace $namespace -f metallb/values.yaml
+helm install metallb metallb/metallb --create-namespace --namespace $namespace -f setup/metallb/values.yaml
 
 # Configuration
 kubectl apply -f metallb/ip-pool-config.yaml
