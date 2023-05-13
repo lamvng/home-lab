@@ -1,0 +1,14 @@
+apiVersion: v2
+name: infra
+version: 1.0.0
+description: Cluster infrastructure basic services
+type: application
+keywords:
+- loadbalancer
+- ingress
+- metallb
+- nginx
+dependencies:
+- name: argo-cd
+  version: 0.13.9
+  repository: https://metallb.github.io/metallb
