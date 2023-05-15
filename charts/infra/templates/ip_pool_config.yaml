@@ -5,7 +5,7 @@ metadata:
   namespace: metallb
 spec:
   addresses:
-    {{ .Values.addresses | toYaml }}
+    {{ .Values.ip_pools | toYaml }}
 
 ---
 
