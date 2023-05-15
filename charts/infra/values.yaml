@@ -1,0 +1,28 @@
+metallb:
+  controller:
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+
+  speaker:
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+
+ip_pools:
+- 192.168.168.0/24
+
+nginx-ingress:
+  controller:
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+  defaultBackend:
+    resources:
+      limits:
+        cpu: 50m
+        memory: 64Mi
+  
