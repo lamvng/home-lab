@@ -9,6 +9,6 @@ keywords:
 - metallb
 - nginx
 dependencies:
-- name: argo-cd
+- name: metallb
   version: 0.13.9
   repository: https://metallb.github.io/metallb
