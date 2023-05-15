@@ -10,3 +10,6 @@ metallb:
       limits:
         cpu: 100m
         memory: 100Mi
+
+addresses:
+- 192.168.168.0/24
