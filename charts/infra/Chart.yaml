@@ -12,3 +12,6 @@ dependencies:
 - name: metallb
   version: 0.13.9
   repository: https://metallb.github.io/metallb
+- name: nginx-ingress
+  version: 0.17.1
+  repository: https://helm.nginx.com/stable
