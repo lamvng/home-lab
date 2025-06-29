@@ -1,0 +1,26 @@
+- name: Download k3s install script
+  ansible.builtin.get_url:
+    url: https://get.k3s.io
+    dest: "{{ k3s_install_script_location }}"
+    mode: "0755"
+
+- name: Install k3s and systemd service
+  become: true
+  ansible.builtin.shell:
+    cmd: "{{ k3s_install_script_location }}"
+  environment:
+    INSTALL_K3S_VERSION: "{{ k3s_version }}"
+
+- name: Examine ufw status
+  become: true
+  changed_when: false
+  register: ufw_status
+  ansible.builtin.command:
+    cmd: ufw status
+
+- name: Open firewall ports for k3s
+  when: "'active' in ufw_status.stdout | lower"
+  block:
+    - name: echo
+      ansible.builtin.debug:
+        msg: hello
