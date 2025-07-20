@@ -1,17 +1,17 @@
-- name: Download k3s install script
+- name: "Download k3s install script"
   ansible.builtin.get_url:
-    url: https://get.k3s.io
     dest: "{{ k3s_install_script_location }}"
     mode: "0755"
+    url: "https://get.k3s.io"
 
-- name: Install k3s and systemd service
+- name: "Install k3s"
   become: true
   ansible.builtin.shell:
     cmd: "{{ k3s_install_script_location }}"
   environment:
     INSTALL_K3S_VERSION: "{{ k3s_version }}"
 
-- name: Populate service facts
+- name: "Populate service facts"
   ansible.builtin.service_facts:
 
 # https://docs.k3s.io/installation/requirements?os=debian#operating-systems
@@ -20,18 +20,61 @@
   when: ansible_facts.services['ufw.service'].status == "enabled"
   block:
 
-    - name: Allow Kubernetes API server
+    - name: "Allow Kubernetes API server"
       community.general.ufw:
-        rule: allow
-        port: '6443'
-        proto: tcp
+        rule: "allow"
+        port: "6443"
+        proto: "tcp"
 
-    - name: Allow traffic from pods
+    - name: "Allow traffic from pods"
       community.general.ufw:
-        rule: allow
-        src: 10.42.0.0/16
+        rule: "allow"
+        src: "10.42.0.0/16"
 
-    - name: Allow traffic from services
+    - name: "Allow traffic from services"
       community.general.ufw:
-        rule: allow
-        src: 10.43.0.0/16
+        rule: "allow"
+        src: "10.43.0.0/16"
+
+- name: "Create {{ k3s_admin_group }} group"
+  become: true
+  ansible.builtin.group:
+    name: "{{ k3s_admin_group }}"
+    state: "present"
+
+- name: "Add {{ ansible_user_id }} user to {{ k3s_admin_group }} group"
+  become: true
+  ansible.builtin.user:
+    append: yes
+    groups: ["{{ k3s_admin_group }}"]
+    name: "{{ ansible_user_id }}"
+
+# https://docs.k3s.io/cluster-access
+# The kubeconfig file is re-generated each time the k3s service start, aka. when the computer starts.
+# Permission needed to be modified each time the host start.
+- name: "Create a script to allow {{ k3s_admin_group }} group read k3s config"
+  become: true
+  ansible.builtin.template:
+    dest: "{{ k3s_kubeconfig_permission_script_location }}"
+    group: "{{ k3s_admin_group }}"
+    mode: "0755"
+    owner: "root"
+    src: "k3s-kubeconfig-permission.sh.j2"
+
+- name: "Create cronjob to allow {{ k3s_admin_group }} group to read k3s config"
+  become: true
+  ansible.builtin.cron:
+    job: "{{ k3s_kubeconfig_permission_script_location }}"
+    name: "Add {{ k3s_admin_group }} group read permission on {{ k3s_kubeconfig_location }}"
+    special_time: "reboot"
+
+- name: "Modify environment to include KUBECONFIG"
+  ansible.builtin.blockinfile:
+    append_newline: true
+    block: |
+      # Set KUBECONFIG for k3s  
+      export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+    insertafter: EOF
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: KUBECONFIG"
+    path: "{{ ansible_env.HOME }}/.bashrc"
+    prepend_newline: true

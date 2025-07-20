@@ -1,0 +1,41 @@
+# https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/
+
+- name: "Download kubectl binary"
+  ansible.builtin.get_url:
+    dest: "/tmp/kubectl"
+    mode: "0755"
+    url: "{{ kubectl_binary_url }}"
+
+- name: "Download kubectl.sha256"
+  ansible.builtin.get_url:
+    dest: "{{ kubectl_sha256_path }}"
+    mode: "0644"
+    url: "{{ kubectl_sha256_url }}"
+
+- name: "Read kubectl expected sha256 checksum"
+  register: "sha256_expected"
+  ansible.builtin.slurp:
+    src: "{{ kubectl_sha256_path }}"
+
+- name: "Compute actual kubectl sha256 checksum"
+  register: "sha256_actual"
+  ansible.builtin.stat:
+    checksum_algorithm: "sha256"
+    path: "{{ kubectl_binary_tmp_path }}"
+
+- name: "Fail if checksums do not match"
+  when: sha256_expected.content | b64decode != sha256_actual.stat.checksum
+  ansible.builtin.fail:
+    msg: SHA256 mismatch. Expected {{ sha256_expected.content | b64decode }} but got {{ sha256_actual.stat.checksum }}.
+
+- name: "Copy kubectl binary"
+  become: true
+  ansible.builtin.copy:
+    dest: "{{ kubectl_binary_path }}"
+    group: "root"
+    mode: "0755"
+    owner: "root"
+    remote_src: true
+    src: "{{ kubectl_binary_tmp_path }}"
+
+# TODO: Autocomplete

@@ -1,2 +1,5 @@
+k3s_admin_group: k3s_admin
 k3s_install_script_location: "/tmp/install_k3s.sh"
-k3s_version: "v1.33.1+k3s1"
+k3s_kubeconfig_location: "/etc/rancher/k3s/k3s.yaml"
+k3s_kubeconfig_permission_script_location: "/usr/local/bin/k3s-kubeconfig-permission.sh"
+k3s_version: "v1.33.2+k3s1"
