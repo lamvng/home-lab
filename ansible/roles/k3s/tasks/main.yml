@@ -68,12 +68,17 @@
     name: "Add {{ k3s_admin_group }} group read permission on {{ k3s_kubeconfig_location }}"
     special_time: "reboot"
 
+- name: "Launch the permission fix script"
+  become: true
+  ansible.builtin.shell:
+    cmd: "{{ k3s_kubeconfig_permission_script_location }}"
+
 - name: "Modify environment to include KUBECONFIG"
   ansible.builtin.blockinfile:
     append_newline: true
     block: |
       # Set KUBECONFIG for k3s  
-      export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+      export KUBECONFIG={{ k3s_kubeconfig_location }}
     insertafter: EOF
     marker: "# {mark} ANSIBLE MANAGED BLOCK: KUBECONFIG"
     path: "{{ ansible_env.HOME }}/.bashrc"

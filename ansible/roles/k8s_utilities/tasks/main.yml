@@ -1,5 +1,7 @@
-- name: Install k9s
-  ansible.builtin.import_tasks: k9s.yml
+- name: "Install k9s"
+  ansible.builtin.import_tasks: "k9s.yml"
+  tags: "k9s"
 
-- name: Install kubectl
-  ansible.builtin.import_tasks: kubectl.yml
+- name: "Install kubectl"
+  ansible.builtin.import_tasks: "kubectl.yml"
+  tags: "kubectl"
