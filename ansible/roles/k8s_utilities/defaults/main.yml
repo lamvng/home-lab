@@ -1,5 +1,8 @@
-k9s_version: v0.50.7
-kubectl_version: v1.33.3
+helm_version: "v3.18.4"
+k9s_version: "v0.50.7"
+kubectl_version: "v1.33.3"
+
+helm_tar_url: "https://get.helm.sh/helm-{{ helm_version }}-linux-amd64.tar.gz"
 
 k9s_deb_path: "/tmp/k9s_linux_amd64.deb"
 k9s_deb_url: "https://github.com/derailed/k9s/releases/download/{{ k9s_version }}/k9s_linux_amd64.deb"

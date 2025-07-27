@@ -5,3 +5,7 @@
 - name: "Install kubectl"
   ansible.builtin.import_tasks: "kubectl.yml"
   tags: "kubectl"
+
+- name: "Install Helm"
+  ansible.builtin.import_tasks: "helm.yml"
+  tags: "helm"

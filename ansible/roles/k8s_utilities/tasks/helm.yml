@@ -1,0 +1,16 @@
+
+- name: "Download and unpack Helm binary"
+  ansible.builtin.unarchive:
+    dest: /tmp
+    remote_src: yes
+    src: "{{ helm_tar_url }}"
+    extra_opts: [ "--strip-components=1" ] # Strips the top-level directory so helm binary appears directly under the dest folder
+
+- name: "Install helm binary"
+  become: true
+  ansible.builtin.copy:
+    src: "/tmp/helm"
+    dest: "/usr/local/bin/helm"
+    mode: "0755"
+    owner: "root"
+    group: "root"
