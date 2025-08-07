@@ -5,3 +5,5 @@
       tags: "k3s"
     - role: "k8s_utilities"
       tags: "k8s_utilities"
+    - role: "argocd"
+      tags: "argocd"

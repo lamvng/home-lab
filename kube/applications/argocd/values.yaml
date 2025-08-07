@@ -1,0 +1,79 @@
+argo-cd:
+  global:
+    domain: argocd.homelab.me
+
+    # Argo loggings are routed to stderr by default.
+    # https://github.com/argoproj/argo-cd/issues/3491.
+    logging:
+      format: json
+
+  # Delete CRDs when uninstall
+  crds:
+    keep: false
+
+  configs:
+    params:
+      server.insecure: true # Offload TLS to the Load Balancer
+
+  controller:
+    replicas: 1
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1Gi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+
+  dex:
+    enabled: false
+
+  redis:
+    resources:
+      limits:
+        cpu: 200m
+        memory: 256Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+
+  redisSecretInit:
+    resources:
+      limits:
+        cpu: 200m
+        memory: 256Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+
+  server:
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+
+  repoServer:
+    resources:
+      limits:
+        cpu: 200m
+        memory: 256Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+
+  applicationSet:
+    resources:
+      limits:
+        cpu: 200m
+        memory: 256Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+
+  # https://argo-cd.readthedocs.io/en/stable/operator-manual/notifications/
+  # Currently not needed for this small home lab. May considering using for more advanced notification schemes.
+  notifications:
+    enabled: false

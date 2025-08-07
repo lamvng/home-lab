@@ -1,0 +1,2 @@
+argocd_namespace: "argocd"
+argocd_chart_version: "8.2.2"

@@ -1,0 +1,9 @@
+- name: "Install ArgoCD via Helm for the first time"
+  kubernetes.core.helm:
+    chart_ref: "argo-cd"
+    chart_repo_url: "https://argoproj.github.io/argo-helm"
+    create_namespace: true
+    release_name: "argocd"
+    release_namespace: "argocd"
+
+# - name: "Create new local DNS entry for ArgoCD"
