@@ -5,6 +5,8 @@
     create_namespace: true
     release_name: "{{ argocd_name }}"
     release_namespace: "{{ argocd_name }}"
+    values_files:
+      - "{{ role_path }}/files/values.yaml"
 
 - name: "Enable argocd bash completion"
   ansible.builtin.blockinfile:
@@ -17,4 +19,13 @@
     path: "{{ ansible_env.HOME }}/.bashrc"
     prepend_newline: true
 
-# - name: "Create new local DNS entry for ArgoCD"
+- name: "Add ArgoCD in hosts"
+  become: true
+  ansible.builtin.blockinfile:
+    append_newline: true
+    block: |
+      127.0.0.1 argocd.homelab.me
+    insertafter: EOF
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: ARGOCD"
+    path: "/etc/hosts"
+    prepend_newline: true
