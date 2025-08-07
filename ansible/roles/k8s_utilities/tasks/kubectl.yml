@@ -2,15 +2,15 @@
 
 - name: "Download kubectl binary"
   ansible.builtin.get_url:
-    dest: "/tmp/kubectl"
+    dest: "{{ kubectl_binary_tmp_path }}"
     mode: "0755"
-    url: "{{ kubectl_binary_url }}"
+    url: "https://dl.k8s.io/release/{{ kubectl_version }}/bin/linux/amd64/kubectl"
 
 - name: "Download kubectl.sha256"
   ansible.builtin.get_url:
     dest: "{{ kubectl_sha256_path }}"
     mode: "0644"
-    url: "{{ kubectl_sha256_url }}"
+    url: "https://dl.k8s.io/release/{{ kubectl_version }}/bin/linux/amd64/kubectl.sha256"
 
 - name: "Read kubectl expected sha256 checksum"
   register: "sha256_expected"
@@ -38,13 +38,29 @@
     remote_src: true
     src: "{{ kubectl_binary_tmp_path }}"
 
-- name: "Enable kubectl bash completion"
+- name: "Download and unpack kubecolor binary"
+  ansible.builtin.unarchive:
+    dest: "/tmp"
+    remote_src: yes
+    src: "https://github.com/kubecolor/kubecolor/releases/download/{{ kubecolor_version }}/kubecolor_0.5.1_linux_amd64.tar.gz"
+
+- name: "Install kubecolor binary"
+  become: true
+  ansible.builtin.copy:
+    src: "/tmp/kubecolor"
+    dest: "/usr/local/bin/kubecolor"
+    mode: "0755"
+    owner: "root"
+    group: "root"
+
+- name: "Enable kubectl and kubecolor bash completion"
   ansible.builtin.blockinfile:
     append_newline: true
     block: |
-      # Set kubectl autocompletion
+      # Set kubectl and kubecolor autocompletion
       source <(kubectl completion bash)
-      alias ktl=kubectl
+      alias kubectl=kubecolor
+      alias ktl=kubecolor
       complete -o default -F __start_kubectl ktl
     insertafter: EOF
     marker: "# {mark} ANSIBLE MANAGED BLOCK: KUBECTL"

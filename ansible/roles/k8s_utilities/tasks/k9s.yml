@@ -2,7 +2,7 @@
   ansible.builtin.get_url:
     dest: "{{ k9s_deb_path }}"
     mode: "0644"
-    url: "{{ k9s_deb_url }}"
+    url: "https://github.com/derailed/k9s/releases/download/{{ k9s_version }}/k9s_linux_amd64.deb"
 
 - name: Install k9s .deb package
   become: true

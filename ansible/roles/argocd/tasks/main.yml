@@ -3,7 +3,18 @@
     chart_ref: "argo-cd"
     chart_repo_url: "https://argoproj.github.io/argo-helm"
     create_namespace: true
-    release_name: "argocd"
-    release_namespace: "argocd"
+    release_name: "{{ argocd_name }}"
+    release_namespace: "{{ argocd_name }}"
+
+- name: "Enable argocd bash completion"
+  ansible.builtin.blockinfile:
+    append_newline: true
+    block: |
+      # Set argocd autocompletion
+      source <(argocd completion bash)
+    insertafter: EOF
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: ARGOCD"
+    path: "{{ ansible_env.HOME }}/.bashrc"
+    prepend_newline: true
 
 # - name: "Create new local DNS entry for ArgoCD"

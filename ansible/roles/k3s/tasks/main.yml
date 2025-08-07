@@ -59,19 +59,24 @@
     group: "{{ k3s_admin_group }}"
     mode: "0755"
     owner: "root"
-    src: "k3s-kubeconfig-permission.sh.j2"
+    src: "{{ k3s_kubeconfig_permission_script_name }}.sh.j2"
 
-- name: "Create cronjob to allow {{ k3s_admin_group }} group to read k3s config"
+- name: "Create systemd service to run at boot to allow {{ k3s_admin_group }} group to read k3s config"
   become: true
-  ansible.builtin.cron:
-    job: "{{ k3s_kubeconfig_permission_script_location }}"
-    name: "Add {{ k3s_admin_group }} group read permission on {{ k3s_kubeconfig_location }}"
-    special_time: "reboot"
+  ansible.builtin.template:
+    dest: "{{ k3s_kubeconfig_permission_systemd_location }}"
+    group: "root"
+    mode: "0644"
+    owner: "root"
+    src: "{{ k3s_kubeconfig_permission_script_name }}.service.j2"
 
-- name: "Launch the permission fix script"
+- name: Enable systemd service
   become: true
-  ansible.builtin.shell:
-    cmd: "{{ k3s_kubeconfig_permission_script_location }}"
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+    enabled: true
+    name: "{{ k3s_kubeconfig_permission_script_name }}.service"
+    state: "started"
 
 - name: "Modify environment to include KUBECONFIG"
   ansible.builtin.blockinfile:

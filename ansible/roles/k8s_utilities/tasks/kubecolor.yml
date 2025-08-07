@@ -1,0 +1,14 @@
+# https://github.com/kubecolor/kubecolor/releases/download/v0.5.1/kubecolor_0.5.1_linux_amd64.tar.gz
+
+- name: "Enable kubectl bash completion"
+  ansible.builtin.blockinfile:
+    append_newline: true
+    block: |
+      # Set kubectl autocompletion
+      source <(kubectl completion bash)
+      alias ktl=kubectl
+      complete -o default -F __start_kubectl ktl
+    insertafter: EOF
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: KUBECTL"
+    path: "{{ ansible_env.HOME }}/.bashrc"
+    prepend_newline: true

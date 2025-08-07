@@ -9,3 +9,7 @@
 - name: "Install Helm"
   ansible.builtin.import_tasks: "helm.yml"
   tags: "helm"
+
+- name: "Install Kubecolor"
+  ansible.builtin.import_tasks: "kubecolor.yml"
+  tags: "kubecolor"

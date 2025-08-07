@@ -1,9 +1,9 @@
 - name: Bootstrap the lab
   hosts: localhost
   roles:
-    - role: "k3s"
-      tags: "k3s"
     - role: "k8s_utilities"
       tags: "k8s_utilities"
+    - role: "k3s"
+      tags: "k3s"
     - role: "argocd"
       tags: "argocd"
