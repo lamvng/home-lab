@@ -8,18 +8,18 @@ spec:
   generators:
     - git:
         repoURL: https://github.com/lamvng/home-lab.git
-        revision: main
+        revision: develop
         directories:
           - path: kube/*/*
   template:
     metadata:
-      name: '{{path.basename}}'
+      name: '{{.path.basename}}'
     spec:
       project: default
       source:
         repoURL: https://github.com/lamvng/home-lab.git
-        targetRevision: main
-        path: '{{path}}'
+        targetRevision: develop
+        path: '{{.path}}'
       destination:
         server: https://kubernetes.default.svc
         namespace: '{{index .path.segments 1}}'
