@@ -1,0 +1,9 @@
+apiVersion: v2
+version: 1.0.0
+name: argocd
+description: Deploy ArgoCD on homelab.
+type: application
+dependencies:
+  - name: "argo-cd"
+    version: "8.2.2"
+    repository: "https://argoproj.github.io/argo-helm"
