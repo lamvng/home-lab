@@ -1,0 +1,25 @@
+{{- /*
+Traefik ingress for K3S
+*/}}
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ template "argo-cd.server.fullname" .Subcharts.argocd }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  entryPoints:
+    - web
+  routes:
+    - kind: Rule
+      match: Host(`{{ .Values.argocd.global.domain }}`)
+      priority: 10
+      services:
+        - name: {{ template "argo-cd.server.fullname" .Subcharts.argocd }}
+          port: {{ .Values.argocd.server.service.servicePortHttp }}
+    - kind: Rule
+      match: Host(`{{ .Values.argocd.global.domain }}`) && Header(`Content-Type`, `application/grpc`)
+      priority: 11
+      services:
+        - name: {{ template "argo-cd.server.fullname" .Subcharts.argocd }}
+          port: {{ .Values.argocd.server.service.servicePortHttp }}
+          scheme: h2c

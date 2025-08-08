@@ -1,6 +1,6 @@
 namespace: argocd
 
-argo-cd:
+argocd:
   global:
     domain: argocd.homelab.me
 
