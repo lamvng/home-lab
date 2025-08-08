@@ -66,3 +66,9 @@
     marker: "# {mark} ANSIBLE MANAGED BLOCK: KUBECTL"
     path: "{{ ansible_env.HOME }}/.bashrc"
     prepend_newline: true
+
+- name: "Install kubectx"
+  become: true
+  ansible.builtin.apt:
+    name: "kubectx"
+    state: "present"

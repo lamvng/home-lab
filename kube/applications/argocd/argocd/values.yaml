@@ -14,6 +14,8 @@ argocd:
     keep: false
 
   configs:
+    cm:
+      timeout.reconciliation: 0
     params:
       server.insecure: true # Offload TLS to the Load Balancer
 

@@ -1,0 +1,13 @@
+domain: firefly.homelab.me
+
+traefikIngress:
+  annotations:
+
+firefly:
+  firefly-db:
+    image:
+      tag: 17-alpine
+    storage:
+      accessModes: ReadWriteOnce
+  importer:
+    enabled: false
