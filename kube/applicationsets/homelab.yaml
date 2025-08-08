@@ -10,7 +10,7 @@ spec:
         repoURL: https://github.com/lamvng/home-lab.git
         revision: develop
         directories:
-          - path: kube/*/*
+          - path: kube/applications/*/*
   template:
     metadata:
       name: '{{.path.basename}}'
@@ -19,10 +19,10 @@ spec:
       source:
         repoURL: https://github.com/lamvng/home-lab.git
         targetRevision: develop
-        path: '{{.path}}'
+        path: '{{.path.path}}'
       destination:
         server: https://kubernetes.default.svc
-        namespace: '{{index .path.segments 1}}'
+        namespace: '{{index .path.segments 2}}'
       syncPolicy:
         automated:
           prune: true
