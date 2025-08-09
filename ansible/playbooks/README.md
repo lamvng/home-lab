@@ -3,7 +3,7 @@
 Bootstrap: Install K3S, and ArgoCD.
 
 ```shell
-ansible-playbook ansible/playbooks/boostrap.yml --ask-become-pass
+ansible-playbook ansible/playbooks/bootstrap.yml --ask-become-pass
 ```
 
 Firefly:

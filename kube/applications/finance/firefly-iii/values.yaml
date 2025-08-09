@@ -1,0 +1,15 @@
+firefly-db:
+  image:
+    tag: 17-alpine
+  storage:
+    accessModes: ReadWriteOnce
+firefly-iii:
+  resources:
+    requests:
+      memory: 128Mi
+      cpu: 200m
+    limits:
+      memory: 512Mi
+      cpu: 500m
+importer:
+  enabled: false
