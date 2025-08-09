@@ -1,0 +1,9 @@
+apiVersion: v2
+version: 1.0.0
+name: cert-manager
+description: Cert Manager with self-signed CA
+type: application
+dependencies:
+  - name: cert-manager
+    version: "v1.18.2"
+    repository: oci://quay.io/jetstack/charts
