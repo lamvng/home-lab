@@ -7,3 +7,4 @@ dependencies:
   - name: cert-manager
     version: "v1.18.2"
     repository: oci://quay.io/jetstack/charts
+    alias: certmanager
