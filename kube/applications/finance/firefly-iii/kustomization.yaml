@@ -1,4 +1,10 @@
-# This should be more straightforward by deploying just the vanilla Helm chart.
+# 1. Use Helm chart over Kustomize deployment, for personal preference of PostgreSQL over MySQL.
+# - The Kustomize manifests use MySQL, and has `mysql` string everywhere. Not practical to patch them all manually.
+#   See https://github.com/firefly-iii/kubernetes/tree/5278a7b5a5b013c0d3ac564ed38b7ef80c725fbf/kustomize.
+# - The Helm chart uses Postgres by default, and there is no reference of specific technology used.
+#   See https://github.com/firefly-iii/kubernetes/tree/5278a7b5a5b013c0d3ac564ed38b7ef80c725fbf/charts/firefly-db.
+
+# 2. This should be more straightforward by deploying just the vanilla Helm chart.
 # Context: However, the chart contains a pre-upgrade Helm hook, which creates a DB backup before any `helm upgrade`.
 # ArgoCD treats pre-upgrade and pre-install Helm hooks the same way, as an ArgoCD PreSync hook.
 # The PreSync hook requires the database (PVC) to be present, and is executed before each sync.
@@ -12,6 +18,7 @@ kind: Kustomization
 
 resources:
   - traefikIngress.yaml
+  - certificate.yaml
 
 helmCharts:
   - name: firefly-iii-stack

@@ -5,7 +5,7 @@ metadata:
   namespace: finance
 spec:
   entryPoints:
-    - web
+    - websecure
   routes:
     - kind: Rule
       match: Host(`firefly.homelab.me`)
@@ -13,3 +13,5 @@ spec:
       services:
         - name: firefly-firefly-iii
           port: 80
+  tls:
+    secretName: firefly-firefly-iii-certificate

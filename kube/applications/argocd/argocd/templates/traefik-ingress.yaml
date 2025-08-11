@@ -19,7 +19,7 @@ metadata:
   {{- end }}
 spec:
   entryPoints:
-    - web
+    - websecure
   routes:
     - kind: Rule
       match: Host(`{{ .Values.argocd.global.domain }}`)
@@ -34,3 +34,5 @@ spec:
         - name: {{ template "argo-cd.server.fullname" .Subcharts.argocd }}
           port: {{ .Values.argocd.server.service.servicePortHttp }}
           scheme: h2c
+  tls:
+    secretName: {{ include "argocd.server.certificate" . }}
