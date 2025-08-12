@@ -7,3 +7,5 @@
       tags: "k3s"
     - role: "argocd"
       tags: "argocd"
+    - role: "firefly_bootstrap"
+      tags: "firefly_bootstrap"

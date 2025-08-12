@@ -1,0 +1,11 @@
+- name: "Add Firefly in hosts"
+  become: true
+  ansible.builtin.blockinfile:
+    append_newline: true
+    block: |
+      127.0.0.1 firefly.homelab.me
+      127.0.0.1 firefly-importer.homelab.me
+    insertafter: EOF
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: FIREFLY"
+    path: "/etc/hosts"
+    prepend_newline: true

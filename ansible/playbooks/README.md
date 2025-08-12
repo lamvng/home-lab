@@ -6,8 +6,8 @@ Bootstrap: Install K3S, and ArgoCD.
 ansible-playbook ansible/playbooks/bootstrap.yml --ask-become-pass
 ```
 
-Firefly:
+Backup Firefly DB dump:
 
 ```shell
-ansible-playbook ansible/playbooks/firefly.yml --ask-become-pass
+ansible-playbook ansible/playbooks/firefly_db_backup.yml --ask-become-pass
 ```
