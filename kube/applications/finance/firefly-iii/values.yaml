@@ -4,12 +4,28 @@ firefly-db:
   storage:
     accessModes: ReadWriteOnce
 firefly-iii:
+  config:
+    env:
+      TRUSTED_PROXIES: "*"
   resources:
     requests:
       memory: 128Mi
-      cpu: 200m
+      cpu: 150m
     limits:
       memory: 512Mi
       cpu: 500m
 importer:
-  enabled: false
+  enabled: true
+  fireflyiii:
+    url: "http://firefly-firefly-iii.finance.svc.cluster.local:80"
+    vanityUrl: "https://firefly.homelab.me"
+  config:
+    env:
+      TRUSTED_PROXIES: "*"
+  resources:
+    requests:
+      memory: 128Mi
+      cpu: 150m
+    limits:
+      memory: 512Mi
+      cpu: 500m

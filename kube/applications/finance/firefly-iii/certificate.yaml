@@ -9,7 +9,25 @@ spec:
   usages:
     - server auth
   dnsNames:
-    - "finance.homelab.me"
+    - "firefly.homelab.me"
+  issuerRef:
+    name: cert-manager-certmanager
+    kind: ClusterIssuer
+
+---
+
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: firefly-importer-certificate
+  namespace: finance
+spec:
+  secretName: firefly-importer-certificate
+  isCA: false
+  usages:
+    - server auth
+  dnsNames:
+    - "firefly-importer.homelab.me"
   issuerRef:
     name: cert-manager-certmanager
     kind: ClusterIssuer
