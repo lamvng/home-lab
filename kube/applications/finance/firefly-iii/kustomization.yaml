@@ -12,13 +12,10 @@
 # - The PreSync hook is executed first, tries to do a job on a non-existent PVC, and fails.
 # - The PVC cannot be provisioned as long as the PreSync job has not finished.
 # See https://github.com/argoproj/argo-cd/issues/7536.
-# Workaround: Skip this hook by using a Kustomize wrapper over the Helm chart.
+# Workaround: Patch the pre-upgrade DB backup job by removing the Helm hook, and adding a ArgoCD sync wave to make it run after the PVCs are provisioned.
+#   The job will fail for the first time, as the DB schema does not exist yet, but the sync won't be blocked.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-
-resources:
-  - traefikIngress.yaml
-  - certificate.yaml
 
 helmCharts:
   - name: firefly-iii-stack
@@ -28,4 +25,18 @@ helmCharts:
     namespace: finance
     valuesFile: values.yaml
     valuesMerge: merge
-    skipHooks: true
+
+resources:
+  - traefikIngress.yaml
+  - certificate.yaml
+
+patches:
+  - path: pvc-patch.yaml
+    target:
+      kind: PersistentVolumeClaim
+  - path: db-job-patch.yaml
+    target:
+      group: batch
+      version: v1
+      kind: Job
+      name: firefly-firefly-db-backup-job
