@@ -1,6 +1,0 @@
-- op: remove
-  path: /metadata/annotations
-- op: add
-  path: /metadata/annotations
-  value:
-    argocd.argoproj.io/sync-wave: "-1"

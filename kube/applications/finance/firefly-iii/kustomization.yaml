@@ -7,16 +7,16 @@
 # 2. This should be more straightforward by deploying just the vanilla Helm chart.
 # Context: However, the chart contains a pre-upgrade Helm hook, which creates a DB backup before any `helm upgrade`.
 # ArgoCD treats pre-upgrade and pre-install Helm hooks the same way, as an ArgoCD PreSync hook.
-# The PreSync hook requires the database (PVC) to be present, and is executed before each sync.
+# The PreSync hook is executed before each sync, and requires the database (PVC) to be present. 
 # Problem: On the first installation, the sync falls into a deadlock, where:
 # - The PreSync hook is executed first, tries to do a job on a non-existent PVC, and fails.
 # - The PVC cannot be provisioned as long as the PreSync job has not finished.
 # See https://github.com/argoproj/argo-cd/issues/7536.
-# Workaround: Patch the pre-upgrade DB backup job by removing the Helm hook, and adding a ArgoCD sync wave to make it run after the PVCs are provisioned.
-#   The job will fail for the first time, as the DB schema does not exist yet, but the sync won't be blocked.
+# Workaround: Remove the hook.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+# https://kubectl.docs.kubernetes.io/references/kustomize/builtins/#_helmchartinflationgenerator_
 helmCharts:
   - name: firefly-iii-stack
     repo: https://firefly-iii.github.io/kubernetes
@@ -25,21 +25,13 @@ helmCharts:
     namespace: finance
     valuesFile: values.yaml
     valuesMerge: merge
+    skipHooks: true
 
 resources:
   - traefikIngress.yaml
   - certificate.yaml
 
 patches:
-  - path: pvc-patch.yaml
-    target:
-      kind: PersistentVolumeClaim
-  - path: db-job-patch.yaml
-    target:
-      group: batch
-      version: v1
-      kind: Job
-      name: firefly-firefly-db-backup-job
   - path: db-cronjob-patch.yaml
     target:
       group: batch
