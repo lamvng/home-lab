@@ -1,0 +1,16 @@
+- name: "Find the Firefly PVC host path"
+  ansible.builtin.import_tasks: find_pvc.yml
+  tags:
+    - "always"
+
+- name: "Backup Firefly DB"
+  ansible.builtin.import_tasks: "backup.yml"
+  tags:
+    - "backup"
+    - "never"
+
+- name: "Restore Firefly DB"
+  ansible.builtin.import_tasks: "restore.yml"
+  tags:
+    - "restore"
+    - "never"

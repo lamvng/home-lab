@@ -1,5 +1,4 @@
 - name: "Backup Firefly DB"
   hosts: localhost
   roles:
-    - role: "firefly_db_backup"
-      tags: "firefly_db_backup"
+    - role: "firefly_db"

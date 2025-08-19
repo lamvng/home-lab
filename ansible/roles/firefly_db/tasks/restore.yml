@@ -1,0 +1,34 @@
+- name: "List all available backups"
+  failed_when: "firefly_backup_files.matched == 0"
+  register: "firefly_backup_files"
+  ansible.builtin.find:
+    age_stamp: "mtime"
+    file_type: "file"
+    paths: "{{ firefly_backup_directory }}"
+
+- name: "Debug firefly_backup_files"
+  debug:
+    msg: "{{ firefly_backup_files.files | sort(attribute='mtime', reverse=True) | first }}"
+
+# If firefly_dump_name variable is provided via command line, use it. Otherwise pick the latest backup
+- name: "Set the selected dump"
+  ansible.builtin.set_fact:
+    firefly_selected_backup: >-
+      {{
+        firefly_dump_name if firefly_dump_name is defined and firefly_dump_name | length > 0
+        else (firefly_backup_files.files | sort(attribute='mtime', reverse=True) | first).path
+      }}
+
+- name: "Copy the latest backup to backup PVC"
+  become: true
+  ansible.builtin.copy:
+    dest: "{{ pvc_folder_search.files[0].path }}/firefly.sql"
+    mode: "0644"
+    remote_src: true
+    src: "{{ firefly_selected_backup }}"
+
+- name: "Launch DB restore job"
+  ansible.builtin.shell:
+    cmd: |-
+      kubectl apply -f {{ role_path }}/files/db-restore-job.yaml
+      kubectl wait --for=condition=complete job firefly-firefly-db-restore --timeout=30s -n finance
