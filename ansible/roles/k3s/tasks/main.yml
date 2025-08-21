@@ -36,6 +36,11 @@
         rule: "allow"
         src: "10.43.0.0/16"
 
+- name: "Disable k3s at startup"
+  ansible.builtin.systemd_service:
+    enabled: false
+    name: "k3s"
+
 - name: "Create {{ k3s_admin_group }} group"
   become: true
   ansible.builtin.group:
@@ -70,7 +75,7 @@
     owner: "root"
     src: "{{ k3s_kubeconfig_permission_script_name }}.service.j2"
 
-- name: Enable systemd service
+- name: "Enable {{ k3s_kubeconfig_permission_script_name }} service"
   become: true
   ansible.builtin.systemd_service:
     daemon_reload: true
