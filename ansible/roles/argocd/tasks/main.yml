@@ -29,8 +29,6 @@
     path: "/etc/hosts"
     prepend_newline: true
 
-# Need to install Kubernetes library for Python to use kubernetes.core.k8s module.
-# Since it is the only "manual" apply action in the playbook, let's use "kubectl apply" directly instead of messing around with PEP 668
 - name: "Deploy root app"
   ansible.builtin.shell:
     cmd: "kubectl apply -n {{ argocd_name }} -f {{ role_path }}/files/root-app.yaml"

@@ -1,0 +1,4 @@
+- name: "Backup & Restore Firefly DB"
+  hosts: "localhost"
+  roles:
+    - role: "firefly_db"

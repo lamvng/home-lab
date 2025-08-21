@@ -37,6 +37,7 @@
         src: "10.43.0.0/16"
 
 - name: "Disable k3s at startup"
+  become: true
   ansible.builtin.systemd_service:
     enabled: false
     name: "k3s"

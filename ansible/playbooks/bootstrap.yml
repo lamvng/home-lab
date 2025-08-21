@@ -1,5 +1,5 @@
 - name: Bootstrap the lab
-  hosts: localhost
+  hosts: "localhost"
   roles:
     - role: "k8s_utilities"
       tags: "k8s_utilities"

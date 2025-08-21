@@ -1,6 +1,6 @@
 - name: "Launch DB backup job"
   ansible.builtin.shell:
-    cmd: -|
+    cmd: |-
       kubectl create job --from=cronjob/firefly-firefly-db-backup firefly-firefly-db-backup-job -n finance
       kubectl wait --for=condition=complete job firefly-firefly-db-backup-job --timeout=30s -n finance
 

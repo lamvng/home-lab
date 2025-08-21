@@ -1,0 +1,1 @@
+ansible_python_interpreter: "{{ ansible_env.HOME }}/homelab_virtualenv/bin/python"

@@ -1,0 +1,4 @@
+- name: "Remove K3S"
+  hosts: "localhost"
+  roles:
+    - role: "k3s_remove"
