@@ -13,7 +13,6 @@ Hosting [Firefly III](https://github.com/firefly-iii/firefly-iii), a personal fi
 ## Solution and Implementation Choices
 
 - Homelab hosted on a laptop.
-- Choosing Kubernetes in favor of potential future investment in additional hardware. At the current scale, the stack could also be run without issues using Docker on a single node.
 - K3S for a lightweight and ready-to-use Kubernetes distribution.
 - Traefik as the ingress controller, since it is packed with K3s and requires no additional maintenance effort.
 - ArgoCD for GitOps-based deployment.
@@ -34,11 +33,11 @@ python -m venv $HOME/homelab_venv
 
 
 
-Set up the cluster:
-
 # On-demand commands or cron jobs
 
-```
+Set up the cluster:
+
+```shell
 ansible-playbook ansible/playbooks/bootstrap.yml --ask-become-pass
 ```
 

@@ -6,6 +6,7 @@
 
 - name: "Backup Firefly DB dump to host"
   become: true
+  when: pvc_folder_search.matched > 0
   ansible.builtin.copy:
     dest: "{{ firefly_backup_directory }}/firefly_{{ ansible_date_time.iso8601_basic_short }}.sql"
     mode: "0644"

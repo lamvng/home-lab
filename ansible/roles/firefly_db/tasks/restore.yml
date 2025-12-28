@@ -19,16 +19,19 @@
   ansible.builtin.debug:
     msg: "{{ firefly_selected_backup }}"
 
-- name: "Copy the latest backup to backup PVC"
-  become: true
-  ansible.builtin.copy:
-    dest: "{{ pvc_folder_search.files[0].path }}/firefly.sql"
-    mode: "0644"
-    remote_src: true
-    src: "{{ firefly_selected_backup }}"
+- name: "Launch the backup"
+  when: pvc_folder_search.matched > 0
+  block:
+  - name: "Copy the latest backup to backup PVC"
+    become: true
+    ansible.builtin.copy:
+      dest: "{{ pvc_folder_search.files[0].path }}/firefly.sql"
+      mode: "0644"
+      remote_src: true
+      src: "{{ firefly_selected_backup }}"
 
-- name: "Launch DB restore job"
-  ansible.builtin.shell:
-    cmd: |-
-      kubectl apply -f {{ role_path }}/files/db_restore_job.yaml
-      kubectl wait --for=condition=complete job firefly-firefly-db-restore --timeout=30s -n finance
+  - name: "Launch DB restore job"
+    ansible.builtin.shell:
+      cmd: |-
+        kubectl apply -f {{ role_path }}/files/db_restore_job.yaml
+        kubectl wait --for=condition=complete job firefly-firefly-db-restore --timeout=30s -n finance
