@@ -58,3 +58,24 @@ Remove K3S:
 ```shell
 ansible-playbook ansible/playbooks/remove_k3s.yml --ask-become-pass
 ```
+
+# Debt
+
+## K3S fails to start after the host IP changes
+
+### Symptom
+
+Whenever the wireless interface changes (eg. laptop is carried elsewhere, or DHCP allocates a different IP when the host is rebooted), K3S fails to start with the following error:
+
+```
+network policy controller: error getting node subnet: failed to find interface with specified node ip
+```
+
+### Bug
+
+It turns out that Flannel picks the controller interface as the first visible interface. K3S then stores the IP in their DB. Whenever the allocated IP is changed, K3S would break.
+
+Some inspiration:
+
+- https://dev.to/shankar_t/my-k3s-pi-cluster-died-after-a-reboot-a-troubleshooting-war-story-m93
+- https://stackoverflow.com/questions/66449289/is-there-any-way-to-bind-k3s-flannel-to-another-interface
