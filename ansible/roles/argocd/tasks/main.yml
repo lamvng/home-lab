@@ -29,15 +29,15 @@
     path: "/etc/hosts"
     prepend_newline: true
 
-- name: "Wait for ArgoCD to be ready"
-  delay: 5
-  retries: 12
-  ansible.builtin.uri:
-    method: "GET"
-    status_code: 200
-    timeout: 1
-    url: "https://{{ argocd_host }}/healthz"
-    validate_certs: false
+# - name: "Wait for ArgoCD to be ready"
+#   delay: 5
+#   retries: 12
+#   ansible.builtin.uri:
+#     method: "GET"
+#     status_code: 200
+#     timeout: 1
+#     url: "https://{{ argocd_host }}/healthz"
+#     validate_certs: false
 
 - name: "Deploy root app"
   ansible.builtin.shell:

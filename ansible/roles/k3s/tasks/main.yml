@@ -4,12 +4,58 @@
     mode: "0755"
     url: "https://get.k3s.io"
 
+# Fix the problem where K3S crashes after the laptop restarts
+# https://dev.to/shankar_t/my-k3s-pi-cluster-died-after-a-reboot-a-troubleshooting-war-story-m93
+# https://stackoverflow.com/questions/66449289/is-there-any-way-to-bind-k3s-flannel-to-another-interface
+- name: "Configure dummy interface for K3S"
+  become: true
+  block:
+    - name: "Load dummy kernel module"
+      community.general.modprobe:
+        name: "dummy"
+        persistent: "present"
+        state: "present"
+
+    - name: "Create dummy interface"
+      register: dummy_netdev
+      ansible.builtin.copy:
+        dest: "/etc/systemd/network/25-{{ k3s_interface_name }}.netdev"
+        content: |-
+          [NetDev]
+          Name={{ k3s_interface_name }}
+          Kind=dummy
+
+    - name: "Assign IP to dummy interface"
+      register: dummy_network
+      ansible.builtin.copy:
+        dest: "/etc/systemd/network/25-{{ k3s_interface_name }}.network"
+        content: |-
+          [Match]
+          Name={{ k3s_interface_name }}
+
+          [Network]
+          Address={{ k3s_node_ip }}
+
+    - name: "Restart systemd-networkd"
+      when: dummy_netdev.changed or dummy_network.changed
+      ansible.builtin.systemd:
+        name: "systemd-networkd"
+        enabled: yes
+        state: "restarted"
+
 - name: "Install k3s"
   become: true
   ansible.builtin.shell:
     cmd: "{{ k3s_install_script_location }}"
   environment:
     INSTALL_K3S_VERSION: "{{ k3s_version }}"
+    INSTALL_K3S_EXEC: >-
+      --node-ip={{ k3s_node_ip }}
+      --flannel-iface={{ k3s_interface_name }}
+      --tls-san={{ k3s_node_ip }}
+      --bind-address={{ k3s_node_ip }}
+      --advertise-address={{ k3s_node_ip }}
+
 
 - name: "Populate service facts"
   ansible.builtin.service_facts:
