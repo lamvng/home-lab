@@ -42,7 +42,7 @@
   ansible.builtin.unarchive:
     dest: "/tmp"
     remote_src: yes
-    src: "https://github.com/kubecolor/kubecolor/releases/download/{{ kubecolor_version }}/kubecolor_0.5.1_linux_amd64.tar.gz"
+    src: "https://github.com/kubecolor/kubecolor/releases/download/v{{ kubecolor_version }}/kubecolor_{{ kubecolor_version }}_linux_amd64.tar.gz"
 
 - name: "Install kubecolor binary"
   become: true
