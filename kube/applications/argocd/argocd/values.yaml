@@ -1,4 +1,5 @@
 namespace: argocd
+local_repo_mount: &local_repo_mount "/home/lamvng/argocd-sync"
 
 argocd:
   global:
@@ -68,6 +69,16 @@ argocd:
       requests:
         cpu: 50m
         memory: 64Mi
+    volumes:
+      - name: local-repo-mount
+        hostPath:
+          path: *local_repo_mount
+          type: Directory
+    volumeMounts:
+      - name: local-repo-mount
+        mountPath: *local_repo_mount
+        readOnly: true
+        recursiveReadOnly: Enabled
 
   applicationSet:
     resources:

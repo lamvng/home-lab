@@ -113,22 +113,9 @@
     owner: "root"
     src: "{{ k3s_kubeconfig_permission_script_name }}.sh.j2"
 
-- name: "Create systemd service to run at boot to allow {{ k3s_admin_group }} group to read k3s config"
+- name: "Run the script to allow {{ k3s_admin_group }} group read k3s config"
   become: true
-  ansible.builtin.template:
-    dest: "{{ k3s_kubeconfig_permission_systemd_location }}"
-    group: "root"
-    mode: "0644"
-    owner: "root"
-    src: "{{ k3s_kubeconfig_permission_script_name }}.service.j2"
-
-- name: "Enable {{ k3s_kubeconfig_permission_script_name }} service"
-  become: true
-  ansible.builtin.systemd_service:
-    daemon_reload: true
-    enabled: true
-    name: "{{ k3s_kubeconfig_permission_script_name }}.service"
-    state: "started"
+  ansible.builtin.command: "{{ k3s_kubeconfig_permission_script_location }}"
 
 - name: "Modify environment to include KUBECONFIG"
   ansible.builtin.blockinfile:

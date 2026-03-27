@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/lamvng/home-lab.git
+    repoURL: file:///home/lamvng/argocd-sync/home-lab
     targetRevision: develop
     path: kube/applicationsets
   destination:
