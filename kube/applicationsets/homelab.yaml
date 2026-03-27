@@ -7,7 +7,7 @@ spec:
   goTemplateOptions: ["missingkey=error"]
   generators:
     - git:
-        repoURL: file:///home/lamvng/argocd-sync/home-lab.git
+        repoURL: file:///home/lamvng/argocd-sync/home-lab
         revision: develop
         directories:
           - path: kube/applications/*/*
@@ -17,7 +17,7 @@ spec:
     spec:
       project: default
       source:
-        repoURL: file:///home/lamvng/argocd-sync/home-lab.git
+        repoURL: file:///home/lamvng/argocd-sync/home-lab
         targetRevision: develop
         path: '{{.path.path}}'
       destination:

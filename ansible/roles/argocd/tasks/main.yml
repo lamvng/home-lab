@@ -42,4 +42,3 @@
 - name: "Deploy root app"
   ansible.builtin.shell:
     cmd: "kubectl apply -n {{ argocd_name }} -f {{ role_path }}/files/root-app.yaml"
-

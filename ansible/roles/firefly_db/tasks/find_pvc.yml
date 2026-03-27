@@ -17,3 +17,7 @@
     paths: "{{ firefly_backup_k3s_pvc_directory }}"
     patterns: "{{ firefly_backup_pvc_volume.stdout }}*"
     recurse: no
+
+- name: "Output host directory of PVC"
+  ansible.builtin.debug:
+    msg: "{{ pvc_folder_search.files | map(attribute='path') | list }}"
