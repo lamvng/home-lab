@@ -1,0 +1,10 @@
+apiVersion: v2
+version: 1.0.0
+name: ollama
+description: Hosting LLM model
+type: application
+dependencies:
+  - name: ollama
+    version: "1.54.0"
+    repository: https://helm.otwld.com
+    alias: ollama

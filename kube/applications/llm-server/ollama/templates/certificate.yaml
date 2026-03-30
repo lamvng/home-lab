@@ -1,15 +1,15 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: {{ include "argocd.server.certificate" . }}
+  name: {{ include "ollama.certificate" . }}
   namespace: {{ .Release.Namespace }}
 spec:
-  secretName: {{ include "argocd.server.certificate" . }}
+  secretName: {{ include "ollama.certificate" . }}
   isCA: false
   usages:
     - server auth
   dnsNames:
-    - "{{ .Values.argocd.global.domain }}"
+    - "{{ .Values.domain }}"
   issuerRef:
     name: cert-manager-certmanager
     kind: ClusterIssuer

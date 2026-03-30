@@ -1,0 +1,19 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ template "ollama.fullname" .Subcharts.ollama }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "ollama.labels" .Subcharts.ollama | nindent 4 }}
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`{{ .Values.domain }}`)
+      priority: 10
+      services:
+        - name: {{ template "ollama.fullname" .Subcharts.ollama }}
+          port: {{ .Values.ollama.service.port }}
+  tls:
+    secretName: {{ include "ollama.certificate" . }}
