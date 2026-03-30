@@ -1,0 +1,10 @@
+- name: "Add Ollama in hosts"
+  become: true
+  ansible.builtin.blockinfile:
+    append_newline: true
+    block: |
+      127.0.0.1 ollama.homelab.me
+    insertafter: EOF
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: OLLAMA"
+    path: "/etc/hosts"
+    prepend_newline: true

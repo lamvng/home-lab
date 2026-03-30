@@ -9,3 +9,5 @@
       tags: "argocd"
     - role: "firefly_bootstrap"
       tags: "firefly_bootstrap"
+    - role: "ollama_bootstrap"
+      tags: "ollama_bootstrap"
