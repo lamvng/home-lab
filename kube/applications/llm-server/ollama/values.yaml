@@ -1,17 +1,18 @@
 domain: ollama.homelab.me
 
 ollama:
-  gpu:
-    enabled: true
-    type: "amd"
-    number: 1
-  models:
-    pull:
-      - mistral:7b # 4.4 GB
-      # - qwen3.5:4b
-    run:
-      - mistral:7b
-    clean: true
+  ollama:
+    gpu:
+      enabled: true
+      type: "amd"
+      number: 1
+    models:
+      pull:
+        - mistral:7b # 4.4 GB
+        # - qwen3.5:4b
+      run:
+        - mistral:7b
+      clean: true
 
   resources:
     requests: {}
