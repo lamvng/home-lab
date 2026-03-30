@@ -69,6 +69,7 @@ argocd:
       requests:
         cpu: 50m
         memory: 64Mi
+    # https://github.com/argoproj/argo-cd/discussions/9912#discussioncomment-9025406
     volumes:
       - name: local-repo-mount
         hostPath:
