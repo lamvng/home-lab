@@ -7,12 +7,16 @@ ollama:
       type: "amd"
       number: 1
     models:
-      pull:
-        - mistral:7b # 4.4 GB
-        # - qwen3.5:4b
-      run:
-        - mistral:7b
+      # pull:
+      #   - mistral:7b # 4.4 GB
+      #   # - qwen3.5:4b
+      # run:
+      #   - mistral:7b
       clean: true
+
+  # extraEnv:
+  #   - name: OLLAMA_DEBUG
+  #     value: "1"
 
   resources:
     requests: {}

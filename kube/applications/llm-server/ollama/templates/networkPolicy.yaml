@@ -1,3 +1,4 @@
+{{- /*
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -15,3 +16,4 @@ spec:
             cidr: 10.42.0.0/16
         - ipBlock:
             cidr: 10.43.0.0/16
+*/}}

@@ -1,7 +1,11 @@
 # This service hogs CPU from time to time. No use of it anyways
 - name: "Stop avahi-daemon"
+  become: true
+  loop:
+    - "avahi-daemon.service"
+    - "avahi-daemon.socket"
   ansible.builtin.systemd_service:
-    name: "avahi-daemon"
+    name: "{{ item }}"
     enabled: false
     state: "stopped"
 
