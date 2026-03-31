@@ -1,0 +1,17 @@
+# This service hogs CPU from time to time. No use of it anyways
+- name: "Stop avahi-daemon"
+  ansible.builtin.systemd_service:
+    name: "avahi-daemon"
+    enabled: false
+    state: "stopped"
+
+- name: "Disable Bluetooth auto enable"
+  become: true
+  notify: "Restart bluetooth"
+  ansible.builtin.ini_file:
+    path: "/etc/bluetooth/main.conf"
+    section: "Policy"
+    option: "AutoEnable"
+    value: "false"
+    no_extra_spaces: true
+    backup: true
