@@ -8,10 +8,9 @@ ollama:
       number: 1
     models:
       pull:
-        - mistral:7b # 4.4 GB
-        # - qwen3.5:4b
+        - qwen3.5:9b
       run:
-        - mistral:7b
+        - qwen3.5:9b
       clean: true
 
   # extraEnv:
