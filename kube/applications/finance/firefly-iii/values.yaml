@@ -4,6 +4,8 @@ firefly-db:
   storage:
     accessModes: ReadWriteOnce
 firefly-iii:
+  image:
+    tag: version-6.5.9
   config:
     env:
       TRUSTED_PROXIES: "*"
