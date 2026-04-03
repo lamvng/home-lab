@@ -29,6 +29,12 @@ python -m venv $HOME/homelab_venv
 
 # On-demand commands or cron jobs
 
+Set up the laptop:
+
+```
+ansible-playbook ansible/playbooks/setup_laptop.yml --ask-become-pass
+```
+
 Set up the cluster:
 
 ```shell

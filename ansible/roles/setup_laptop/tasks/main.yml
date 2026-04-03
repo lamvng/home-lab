@@ -7,6 +7,7 @@
   ansible.builtin.systemd_service:
     name: "{{ item }}"
     enabled: false
+    masked: true
     state: "stopped"
 
 - name: "Disable Bluetooth auto enable"
