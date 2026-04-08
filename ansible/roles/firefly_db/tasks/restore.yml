@@ -19,19 +19,38 @@
   ansible.builtin.debug:
     msg: "{{ firefly_selected_backup }}"
 
-- name: "Launch the backup"
+- name: "Launch the restore"
   when: pvc_folder_search.matched > 0
   block:
-  - name: "Copy the latest backup to backup PVC"
-    become: true
-    ansible.builtin.copy:
-      dest: "{{ pvc_folder_search.files[0].path }}/firefly.sql"
-      mode: "0644"
-      remote_src: true
-      src: "{{ firefly_selected_backup }}"
+    - name: "Set variables"
+      ansible.builtin.set_fact:
+        firefly_backup_pvc_dump: "{{ pvc_folder_search.files[0].path }}/firefly.sql"
 
-  - name: "Launch DB restore job"
-    ansible.builtin.shell:
-      cmd: |-
-        kubectl apply -f {{ role_path }}/files/db_restore_job.yaml
-        kubectl wait --for=condition=complete job firefly-firefly-db-restore --timeout=30s -n finance
+    - name: "Decrypt DB dump"
+      become: true
+      no_log: true
+      ansible.builtin.shell:
+        cmd: >-
+          openssl enc -d -aes-256-cbc -pbkdf2
+          -in {{ firefly_selected_backup }}
+          -out {{ firefly_backup_pvc_dump }}
+          -pass "pass:{{ firefly_db_dump_encrypt_password }}"
+
+    - name: "Set permission for decrypted DB dump"
+      become: true
+      ansible.builtin.file:
+        mode: "0644"
+        owner: "{{ ansible_user_id }}"
+        path: "{{ firefly_backup_pvc_dump }}"
+
+    - name: "Launch DB restore job"
+      ansible.builtin.shell:
+        cmd: |-
+          kubectl apply -f {{ role_path }}/files/db_restore_job.yaml
+          kubectl wait --for=condition=complete job firefly-firefly-db-restore --timeout=30s -n finance
+  always:
+    - name: "Delete plain DB dump"
+      become: true
+      ansible.builtin.file:
+        path: "{{ firefly_backup_pvc_dump }}"
+        state: "absent"

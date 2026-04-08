@@ -8,8 +8,10 @@ ollama:
       number: 1
     models:
       pull:
+        # - gemma4:e4b
         - qwen3.5:9b
       run:
+        # - gemma4:e4b
         - qwen3.5:9b
       clean: true
 

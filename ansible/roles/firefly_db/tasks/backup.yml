@@ -4,12 +4,36 @@
       kubectl create job --from=cronjob/firefly-firefly-db-backup firefly-firefly-db-backup-job -n finance
       kubectl wait --for=condition=complete job firefly-firefly-db-backup-job --timeout=30s -n finance
 
-- name: "Backup Firefly DB dump to host"
-  become: true
+- name: "Copy dump from PVC to host"
   when: pvc_folder_search.matched > 0
-  ansible.builtin.copy:
-    dest: "{{ firefly_backup_directory }}/firefly_{{ ansible_date_time.iso8601_basic_short }}.sql"
-    mode: "0644"
-    owner: "{{ ansible_user_id }}"
-    remote_src: true
-    src: "{{ pvc_folder_search.files[0].path }}/firefly.sql"
+  block:
+
+    - name: "Set variables"
+      ansible.builtin.set_fact:
+        firefly_backup_pvc_dump: "{{ pvc_folder_search.files[0].path }}/firefly.sql"
+        firefly_backup_host_dump: "{{ firefly_backup_directory }}/firefly_{{ ansible_date_time.iso8601_basic_short }}.sql.enc"
+
+    - name: "Encrypt DB dump"
+      # no_log: true
+      become: true
+      ansible.builtin.shell:
+        cmd: >-
+          openssl enc -aes-256-cbc -salt -pbkdf2
+          -in {{ firefly_backup_pvc_dump }}
+          -out {{ firefly_backup_host_dump }}
+          -pass "pass:{{ firefly_db_dump_encrypt_password }}"
+
+    - name: "Set permission for encrypted DB dump"
+      become: true
+      when: pvc_folder_search.matched > 0
+      ansible.builtin.file:
+        mode: "0644"
+        owner: "{{ ansible_user_id }}"
+        path: "{{ firefly_backup_host_dump }}"
+  always:
+    - name: "Delete plain DB dump"
+      become: true
+      ansible.builtin.file:
+        path: "{{ firefly_backup_pvc_dump }}"
+        state: "absent"
+        
