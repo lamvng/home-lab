@@ -5,6 +5,9 @@
     - name: "firefly_db_dump_encrypt_password"
       prompt: "Password to encrypt Firefly DB dump"
       private: true
+    - name: "firefly_db_dump_encrypt_password_2nd_try"
+      prompt: "Retype the password"
+      private: true
 
   roles:
     - role: "firefly_db"
