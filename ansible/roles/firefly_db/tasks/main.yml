@@ -3,7 +3,8 @@
     msg: "Passwords do not match"
   when: firefly_db_dump_encrypt_password != firefly_db_dump_encrypt_password_2nd_try
   tags:
-    - "always"
+    - "backup"
+    - "never"
 
 - name: "Find the Firefly PVC host path"
   ansible.builtin.import_tasks: find_pvc.yml
