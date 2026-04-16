@@ -11,6 +11,10 @@ spec:
         revision: develop
         directories:
           - path: kube/applications/*/*
+          - path: kube/applications/*-excluded/*
+            exclude: true
+          - path: kube/applications/*/*-excluded
+            exclude: true
   template:
     metadata:
       name: '{{.path.basename}}'
