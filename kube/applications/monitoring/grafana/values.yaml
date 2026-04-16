@@ -1,0 +1,13 @@
+domain: grafana.homelab.me
+
+grafana:
+  resources:
+    limits:
+      cpu: 300m
+      memory: 256Mi
+
+  env:
+    GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+    GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES: "false"
+    GF_ANALYTICS_REPORTING_ENABLED: "false"
+    GF_SERVER_ROOT_URL: "https://grafana.homelab.me"

@@ -1,0 +1,15 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "grafana.certificate" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  secretName: {{ include "grafana.certificate" . }}
+  isCA: false
+  usages:
+    - server auth
+  dnsNames:
+    - "{{ .Values.domain }}"
+  issuerRef:
+    name: cert-manager-certmanager
+    kind: ClusterIssuer

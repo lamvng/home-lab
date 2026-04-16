@@ -5,6 +5,7 @@
     block: |
       127.0.0.1 firefly.homelab.me
       127.0.0.1 firefly-importer.homelab.me
+      127.0.0.1 grafana.homelab.me
     insertafter: EOF
     marker: "# {mark} ANSIBLE MANAGED BLOCK: FIREFLY"
     path: "/etc/hosts"
