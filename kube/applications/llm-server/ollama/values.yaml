@@ -10,10 +10,12 @@ ollama:
     models:
       pull:
         # - gemma4:e4b # Need newer version of Ollama # v0.20.0
-        - qwen3.5:4b
+        # - qwen3.5:4b
+        - qwen3.5:2b
       run:
         # - gemma4:e4b # Need newer version of Ollama # v0.20.0
-        - qwen3.5:4b
+        # - qwen3.5:
+        - qwen3.5:2b
       clean: true
 
   extraEnv:

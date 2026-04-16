@@ -3,6 +3,13 @@ firefly-db:
     tag: 17-alpine
   storage:
     accessModes: ReadWriteOnce
+  resources:
+    requests:
+      memory: 128Mi
+      cpu: 100m
+    limits:
+      memory: 512Mi
+      cpu: 500m
 firefly-iii:
   image:
     tag: version-6.5.9
@@ -17,7 +24,7 @@ firefly-iii:
       memory: 512Mi
       cpu: 500m
 importer:
-  enabled: true
+  enabled: false
   fireflyiii:
     url: "http://firefly-firefly-iii.finance.svc.cluster.local:80"
     vanityUrl: "https://firefly.homelab.me"
