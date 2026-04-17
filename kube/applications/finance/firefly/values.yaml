@@ -1,0 +1,24 @@
+domain: firefly.homelab.me
+
+firefly-iii-stack:
+  firefly-db:
+    image:
+      tag: 17-alpine
+    storage:
+      accessModes: ReadWriteOnce
+    configs:
+      BACKUP_ENABLED: false
+      RESTORE_ENABLED: false
+  firefly-iii:
+    config:
+      env:
+        TRUSTED_PROXIES: "*"
+    resources:
+      requests:
+        memory: 128Mi
+        cpu: 100m
+      limits:
+        memory: 512Mi
+        cpu: 500m
+  importer:
+    enabled: false
