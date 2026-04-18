@@ -1,5 +1,9 @@
 domain: firefly.homelab.me
 
+customDbImage:
+  image: alpine/psql
+  tag: 17.5
+
 firefly-iii-stack:
   firefly-db:
     image:
