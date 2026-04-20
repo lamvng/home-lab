@@ -28,9 +28,11 @@ spec:
         server: https://kubernetes.default.svc
         namespace: '{{index .path.segments 2}}'
       syncPolicy:
+        retry:
+          refresh: true
         syncOptions:
           - CreateNamespace=true
           - ServerSideApply=true
         automated:
           prune: true
-          selfHeal: true
+          selfHeal: false

@@ -13,10 +13,12 @@ firefly-iii-stack:
     configs:
       BACKUP_ENABLED: false
       RESTORE_ENABLED: false
+      TZ: Europe/Paris
   firefly-iii:
     config:
       env:
         TRUSTED_PROXIES: "*"
+        TZ: Europe/Paris
     resources:
       requests:
         memory: 128Mi
