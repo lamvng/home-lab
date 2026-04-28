@@ -56,7 +56,6 @@
       --bind-address={{ k3s_node_ip }}
       --advertise-address={{ k3s_node_ip }}
 
-
 - name: "Populate service facts"
   ansible.builtin.service_facts:
 
@@ -81,6 +80,13 @@
       community.general.ufw:
         rule: "allow"
         src: "10.43.0.0/16"
+
+- name: "Copy custom Traefik config"
+  become: true
+  ansible.builtin.copy:
+    dest: "/var/lib/rancher/k3s/server/manifests/traefik-custom.yaml"
+    mode: "0600"
+    src: "traefik-custom.yaml"
 
 - name: "Disable k3s at startup"
   become: true

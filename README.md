@@ -62,4 +62,6 @@ ansible-playbook ansible/playbooks/remove_k3s.yml --ask-become-pass
 # TODO
 
 - [x] Fix a bug where K3s crashes at startup because of node IP changes.
+- [ ] Migrate to Gateway API.
 - [ ] Introduce proper secret management.
+- [ ] Use `kubernetes` module for related bootstrapping Ansible tasks.
