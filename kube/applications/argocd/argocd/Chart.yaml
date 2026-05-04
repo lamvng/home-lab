@@ -5,6 +5,6 @@ description: Deploy ArgoCD on homelab.
 type: application
 dependencies:
   - name: "argo-cd"
-    version: "9.4.17"
+    version: "9.5.11"
     repository: "https://argoproj.github.io/argo-helm"
     alias: argocd

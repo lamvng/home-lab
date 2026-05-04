@@ -1,3 +1,6 @@
+# TODO:
+#   - Create job fails silently if another job exists
+#   - Should randomize name for the job
 - name: "Launch DB backup job"
   ansible.builtin.shell:
     cmd: |-

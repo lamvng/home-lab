@@ -4,7 +4,14 @@ metadata:
   name: traefik
   namespace: kube-system
 spec:
+  # Access log did not work
   valuesContent: |-
     providers:
       kubernetesGateway:
         enabled: true
+    logs:
+      access:
+        enabled: true
+        timezone: "Europe/Paris"
+        filters:
+          statuscodes: "400-499,500-599"

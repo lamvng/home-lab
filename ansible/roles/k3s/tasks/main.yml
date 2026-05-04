@@ -87,6 +87,8 @@
     dest: "/var/lib/rancher/k3s/server/manifests/traefik-custom.yaml"
     mode: "0600"
     src: "traefik-custom.yaml"
+  tags:
+    - "traefik"
 
 - name: "Disable k3s at startup"
   become: true
