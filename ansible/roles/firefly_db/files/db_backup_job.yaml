@@ -1,28 +1,30 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
+  name: firefly-firefly-db-backup
+  namespace: finance
   labels:
     app: firefly-db
     chart: firefly-db-0.2.10
     heritage: Helm
     release: firefly
-  name: firefly-firefly-db-restore
-  namespace: finance
 spec:
   backoffLimit: 3
   ttlSecondsAfterFinished: 120
   template:
     spec:
       containers:
-        - name: firefly-firefly-db-restore
-          image: alpine/psql:17.5
+        - name: firefly-firefly-db-backup-job
+          image: postgres:17-alpine
           imagePullPolicy: IfNotPresent
           command:
             - /bin/sh
-            - -c
+            - '-c'
             - |-
               set -euxo pipefail
-              psql -h $DBHOST -p $DBPORT -U $DBUSER < /var/lib/backup/${DBNAME}.sql
+              pg_dump -h $DBHOST -p $DBPORT -U $DBUSER --format=p --clean -d $DBNAME > /var/lib/backup/$DBNAME.sql
+              gzip -c /var/lib/backup/$DBNAME.sql > /var/lib/backup/$DBNAME-$(date -Is).sql.gz
+              ls -1t /var/lib/backup/$DBNAME-*.sql.gz | tail -n +15 | xargs -r rm --
           envFrom:
             - configMapRef:
                 name: firefly-firefly-db-config

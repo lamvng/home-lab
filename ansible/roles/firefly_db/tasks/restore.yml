@@ -4,7 +4,7 @@
   ansible.builtin.find:
     age_stamp: "mtime"
     file_type: "file"
-    paths: "{{ firefly_backup_directory }}"
+    paths: "{{ firefly_db_backup_directory }}"
 
 # If firefly_dump_name variable is provided via command line, use it. Otherwise pick the latest backup
 - name: "Set the selected dump"
@@ -40,14 +40,28 @@
       become: true
       ansible.builtin.file:
         mode: "0644"
-        owner: "{{ ansible_user_id }}"
+        owner: "{{ ansible_facts.user_id }}"
         path: "{{ firefly_backup_pvc_dump }}"
 
     - name: "Launch DB restore job"
-      ansible.builtin.shell:
-        cmd: |-
-          kubectl apply -f {{ role_path }}/files/db_restore_job.yaml
-          kubectl wait --for=condition=complete job firefly-firefly-db-restore --timeout=30s -n finance
+      kubernetes.core.k8s:
+        state: present
+        src: "{{ role_path }}/files/db_restore_job.yaml"
+
+    - name: "Wait for DB restore job to complete"
+      kubernetes.core.k8s_info:
+        kind: Job
+        name: firefly-firefly-db-restore
+        namespace: finance
+      register: job_status
+      until: >
+        job_status.resources | length > 0 and
+        (job_status.resources[0].status.conditions | default([]) |
+        selectattr('type', 'equalto', 'Complete') |
+        selectattr('status', 'equalto', 'True') | list | length > 0)
+      retries: 20
+      delay: 5
+
   always:
     - name: "Delete plain DB dump"
       become: true

@@ -26,6 +26,7 @@ customDbImage:
 
 firefly-iii-stack:
   firefly-db:
+    backupSchedule: null
     image:
       tag: 17-alpine
     storage:

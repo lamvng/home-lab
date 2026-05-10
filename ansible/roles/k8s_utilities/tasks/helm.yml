@@ -23,5 +23,5 @@
       source <(helm completion bash)
     insertafter: EOF
     marker: "# {mark} ANSIBLE MANAGED BLOCK: HELM"
-    path: "{{ ansible_env.HOME }}/.bashrc"
+    path: "{{ ansible_facts.env.HOME }}/.bashrc"
     prepend_newline: true

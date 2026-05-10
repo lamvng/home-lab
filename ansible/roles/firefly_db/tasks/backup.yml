@@ -1,11 +1,21 @@
-# TODO:
-#   - Create job fails silently if another job exists
-#   - Should randomize name for the job
 - name: "Launch DB backup job"
-  ansible.builtin.shell:
-    cmd: |-
-      kubectl create job --from=cronjob/firefly-firefly-db-backup firefly-firefly-db-backup-job -n finance
-      kubectl wait --for=condition=complete job firefly-firefly-db-backup-job --timeout=30s -n finance
+  kubernetes.core.k8s:
+    state: present
+    src: "{{ role_path }}/files/db_backup_job.yaml"
+
+- name: "Wait for DB backup job to complete"
+  kubernetes.core.k8s_info:
+    kind: Job
+    name: firefly-firefly-db-backup
+    namespace: finance
+  register: job_status
+  until: >
+    job_status.resources | length > 0 and
+    (job_status.resources[0].status.conditions | default([]) |
+    selectattr('type', 'equalto', 'Complete') |
+    selectattr('status', 'equalto', 'True') | list | length > 0)
+  retries: 6
+  delay: 5
 
 - name: "Copy dump from PVC to host"
   when: pvc_folder_search.matched > 0
@@ -14,7 +24,7 @@
     - name: "Set variables"
       ansible.builtin.set_fact:
         firefly_backup_pvc_dump: "{{ pvc_folder_search.files[0].path }}/firefly.sql"
-        firefly_backup_host_dump: "{{ firefly_backup_directory }}/firefly_{{ ansible_date_time.iso8601_basic_short }}.sql.enc"
+        firefly_backup_host_dump: "{{ firefly_db_backup_directory }}/firefly_{{ ansible_facts.date_time.iso8601_basic_short }}.sql.enc"
 
     - name: "Encrypt DB dump"
       # no_log: true
@@ -31,8 +41,9 @@
       when: pvc_folder_search.matched > 0
       ansible.builtin.file:
         mode: "0644"
-        owner: "{{ ansible_user_id }}"
+        owner: "{{ ansible_facts.user_id }}"
         path: "{{ firefly_backup_host_dump }}"
+
   always:
     - name: "Delete plain DB dump"
       become: true

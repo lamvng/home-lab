@@ -1,5 +1,5 @@
 namespace: argocd
-local_repo_mount: &local_repo_mount "/home/lamvng/argocd-sync"
+local_repo_mount: &local_repo_mount "/opt/repos/home-lab"
 
 argocd:
   global:

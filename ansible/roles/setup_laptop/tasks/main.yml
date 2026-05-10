@@ -13,10 +13,70 @@
 - name: "Disable Bluetooth auto enable"
   become: true
   notify: "Restart bluetooth"
-  ansible.builtin.ini_file:
+  community.general.ini_file:
     path: "/etc/bluetooth/main.conf"
     section: "Policy"
     option: "AutoEnable"
     value: "false"
     no_extra_spaces: true
     backup: true
+    mode: "644"
+
+- name: "Install Apt programs"
+  become: true
+  loop:
+    - "gnome-tweaks"
+    - "gufw"
+    - "htop"
+    - "ncdu"
+    - "terminator"
+    - "ubuntu-restricted-extras"
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: "present"
+
+- name: Install Snap packages
+  become: true
+  loop:
+    - "spotify"
+    - "pinta"
+  community.general.snap:
+    name: "{{ item }}"
+    state: "present"
+
+- name: "Enable UFW firewall"
+  become: true
+  community.general.ufw:
+    logging: "off"
+    state: "enabled"
+
+- name: "Link Terminator"
+  become: true
+  community.general.alternatives:
+    name: "x-terminal-emulator"
+    link: "/usr/bin/x-terminal-emulator"
+    path: "/usr/bin/terminator"
+    priority: 50
+
+- name: "Make Terminator default terminal"
+  community.general.dconf:
+    key: "/org/gnome/desktop/applications/terminal/exec"
+    value: "'terminator'"
+    state: "present"
+
+- name: "Set terminal execution argument"
+  community.general.dconf:
+    key: "/org/gnome/desktop/applications/terminal/exec-arg"
+    value: "'-x'"
+    state: "present"
+
+- name: "Enable git bash completion"
+  ansible.builtin.blockinfile:
+    append_newline: true
+    block: |
+      # Set git autocompletion
+      source /usr/share/bash-completion/completions/git
+    insertafter: EOF
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: GIT"
+    path: "{{ ansible_facts.env.HOME }}/.bashrc"
+    prepend_newline: true

@@ -7,17 +7,6 @@
     release_namespace: "{{ argocd_name }}"
     values: "{{ lookup('file', role_path + '/files/values.yaml') | from_yaml | dict2items | selectattr('key', 'equalto', 'argocd') | map(attribute='value') | first }}"
 
-- name: "Enable argocd bash completion"
-  ansible.builtin.blockinfile:
-    append_newline: true
-    block: |
-      # Set argocd autocompletion
-      source <(argocd completion bash)
-    insertafter: EOF
-    marker: "# {mark} ANSIBLE MANAGED BLOCK: ARGOCD"
-    path: "{{ ansible_env.HOME }}/.bashrc"
-    prepend_newline: true
-
 - name: "Add ArgoCD in hosts"
   become: true
   ansible.builtin.blockinfile:
@@ -29,16 +18,25 @@
     path: "/etc/hosts"
     prepend_newline: true
 
-# - name: "Wait for ArgoCD to be ready"
-#   delay: 5
-#   retries: 12
-#   ansible.builtin.uri:
-#     method: "GET"
-#     status_code: 200
-#     timeout: 1
-#     url: "https://{{ argocd_host }}/healthz"
-#     validate_certs: false
+- name: Wait for ArgoCD server to be ready
+  loop:
+    - "{{ argocd_name }}-server"
+    - "{{ argocd_name }}-repo-server"
+  kubernetes.core.k8s_info:
+    api_version: "apps/v1"
+    kind: "Deployment"
+    name: "{{ item }}"
+    namespace: "{{ argocd_name }}"
+  register: "argocd_deploy"
+  retries: 50
+  delay: 5
+  until:
+    - argocd_deploy.resources | length > 0
+    - argocd_deploy.resources[0].status.availableReplicas is defined
+    - argocd_deploy.resources[0].status.availableReplicas > 0
 
 - name: "Deploy root app"
-  ansible.builtin.shell:
-    cmd: "kubectl apply -n {{ argocd_name }} -f {{ role_path }}/files/root-app.yaml"
+  kubernetes.core.k8s:
+    namespace: "{{ argocd_name }}"
+    state: present
+    src: "{{ role_path }}/files/root-app.yaml"

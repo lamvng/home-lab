@@ -1,21 +1,23 @@
 - name: "Create Firefly backup folder"
   ansible.builtin.file:
-    path: "{{ firefly_backup_directory }}"
-    state: directory
+    path: "{{ firefly_db_backup_directory }}"
+    state: "directory"
     mode: "0755"
 
 - name: "Get Firefly backup PVC volume"
-  changed_when: false
-  register: firefly_backup_pvc_volume
-  ansible.builtin.command: "kubectl get pvc -n finance firefly-firefly-db-backup-storage-claim -o jsonpath='{.spec.volumeName}'"
+  kubernetes.core.k8s_info:
+    kind: "PersistentVolumeClaim"
+    name: "firefly-firefly-db-backup-storage-claim"
+    namespace: "finance"
+  register: "firefly_backup_pvc"
 
 - name: "Find the host directory of the PVC"
   become: true
   register: pvc_folder_search
   ansible.builtin.find:
     file_type: "directory"
-    paths: "{{ firefly_backup_k3s_pvc_directory }}"
-    patterns: "{{ firefly_backup_pvc_volume.stdout }}*"
+    paths: "{{ firefly_db_backup_k3s_pvc_directory }}"
+    patterns: "{{ firefly_backup_pvc.resources[0].spec.volumeName }}*"
     recurse: no
 
 - name: "Output host directory of PVC"

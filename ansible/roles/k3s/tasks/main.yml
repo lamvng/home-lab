@@ -102,12 +102,12 @@
     name: "{{ k3s_admin_group }}"
     state: "present"
 
-- name: "Add {{ ansible_user_id }} user to {{ k3s_admin_group }} group"
+- name: "Add {{ ansible_facts.user_id }} user to {{ k3s_admin_group }} group"
   become: true
   ansible.builtin.user:
-    append: yes
+    append: true
     groups: ["{{ k3s_admin_group }}"]
-    name: "{{ ansible_user_id }}"
+    name: "{{ ansible_facts.user_id }}"
 
 # https://docs.k3s.io/cluster-access
 # The kubeconfig file is re-generated each time the k3s service start, aka. when the computer starts.
@@ -129,9 +129,9 @@
   ansible.builtin.blockinfile:
     append_newline: true
     block: |
-      # Set KUBECONFIG for k3s  
+      # Set KUBECONFIG for k3s
       export KUBECONFIG={{ k3s_kubeconfig_location }}
     insertafter: EOF
     marker: "# {mark} ANSIBLE MANAGED BLOCK: KUBECONFIG"
-    path: "{{ ansible_env.HOME }}/.bashrc"
+    path: "{{ ansible_facts.env.HOME }}/.bashrc"
     prepend_newline: true
