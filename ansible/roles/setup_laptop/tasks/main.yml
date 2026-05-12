@@ -28,7 +28,9 @@
     - "gnome-tweaks"
     - "gufw"
     - "htop"
+    - "jq"
     - "ncdu"
+    - "neovim"
     - "terminator"
     - "ubuntu-restricted-extras"
   ansible.builtin.apt:

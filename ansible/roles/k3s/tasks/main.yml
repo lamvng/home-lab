@@ -55,6 +55,7 @@
       --tls-san={{ k3s_node_ip }}
       --bind-address={{ k3s_node_ip }}
       --advertise-address={{ k3s_node_ip }}
+      --secrets-encryption
 
 - name: "Populate service facts"
   ansible.builtin.service_facts:
@@ -115,15 +116,16 @@
 - name: "Create a script to allow {{ k3s_admin_group }} group read k3s config"
   become: true
   ansible.builtin.template:
-    dest: "{{ k3s_kubeconfig_permission_script_location }}"
+    dest: "{{ k3s_start_script_location }}"
     group: "{{ k3s_admin_group }}"
     mode: "0755"
     owner: "root"
-    src: "{{ k3s_kubeconfig_permission_script_name }}.sh.j2"
+    src: "{{ k3s_start_script_name }}.sh.j2"
+  tags: [script]
 
 - name: "Run the script to allow {{ k3s_admin_group }} group read k3s config"
   become: true
-  ansible.builtin.command: "{{ k3s_kubeconfig_permission_script_location }}"
+  ansible.builtin.command: "{{ k3s_start_script_location }}"
 
 - name: "Modify environment to include KUBECONFIG"
   ansible.builtin.blockinfile:

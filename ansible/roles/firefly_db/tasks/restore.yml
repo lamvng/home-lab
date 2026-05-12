@@ -59,7 +59,7 @@
         (job_status.resources[0].status.conditions | default([]) |
         selectattr('type', 'equalto', 'Complete') |
         selectattr('status', 'equalto', 'True') | list | length > 0)
-      retries: 20
+      retries: 6
       delay: 5
 
   always:

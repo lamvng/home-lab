@@ -1,17 +1,19 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-set -euo pipefail
+set -euxo pipefail
 
 i=0
 while ! systemctl is-active --quiet k3s.service; do
-    ((i++))
+    i=$((i + 1))
     if [[ "$i" -ge 10 ]]; then
         echo "Error: k3s.service failed to start after 10 attempts" >&2
         exit 1
     fi
+    systemctl start k3s.service
     sleep 1
 done
 
+# Allow {{ k3s_admin_group }} group to read the K3s kubeconfig file
 current_group=$(stat -c '%G' {{ k3s_kubeconfig_location }})
 current_mode=$(stat -c '%a' {{ k3s_kubeconfig_location }})
 if [[ "$current_group" != "{{ k3s_admin_group }}" || "$current_mode" != "640" ]]; then

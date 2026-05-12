@@ -1,28 +1,44 @@
 {{- define "firefly.grafana-secret-name" -}}
 {{ include "firefly-iii.fullname" . }}-grafana
 {{- end -}}
-
 {{- /*
-While a production-grade secret management solution is not available,
-  have a job to duplicate the secret from Firefly namespace to Grafana namespace.
+Duplicate the Grafana DB user so that Grafana on another namespace can use.
 */}}
-
-{{- $password := randAlphaNum 32 | quote -}}
-{{- $namespaces := list .Release.Namespace "monitoring" -}}
-{{- range $namespace := $namespaces }}
----
-apiVersion: v1
-kind: Secret
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
 metadata:
-  name: {{ include "firefly.grafana-secret-name" $ }}
-  namespace: {{ $namespace }}
-  labels:
-    {{- include "firefly-iii.labels" $ | nindent 4 }}
-type: Opaque
-stringData:
-  GRAFANA_USER: {{ "grafana" | quote }}
-  GRAFANA_PASSWORD: {{ $password }}
-{{- end }}
+  name: {{ include "firefly.grafana-secret-name" . }}
+  namespace: {{ .Values.grafanaUser.grafana_namespace }}
+spec:
+  encryptedData:
+    GRAFANA_USER: {{ .Values.grafanaUser.grafana_namespace_user }}
+    GRAFANA_PASSWORD: {{ .Values.grafanaUser.grafana_namespace_password }}
+  template:
+    type: Opaque
+    metadata:
+      name: {{ include "firefly.grafana-secret-name" . }}
+      namespace: {{ .Values.grafanaUser.grafana_namespace }}
+      labels:
+        {{- include "firefly-iii.labels" . | nindent 8 }}
+
+---
+
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: {{ include "firefly.grafana-secret-name" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  encryptedData:
+    GRAFANA_USER: {{ .Values.grafanaUser.firefly_namespace_user }}
+    GRAFANA_PASSWORD: {{ .Values.grafanaUser.firefly_namespace_password }}
+  template:
+    type: Opaque
+    metadata:
+      name: {{ include "firefly.grafana-secret-name" . }}
+      namespace: {{ .Release.Namespace }}
+      labels:
+        {{- include "firefly-iii.labels" . | nindent 8 }}
 
 ---
 

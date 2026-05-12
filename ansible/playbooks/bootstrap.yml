@@ -11,3 +11,7 @@
       tags: "firefly_bootstrap"
     - role: "ollama_bootstrap"
       tags: "ollama_bootstrap"
+    - role: "sealed_secrets"
+      tags:
+        - "sealed_secrets"
+        - "never"
