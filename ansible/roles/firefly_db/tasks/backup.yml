@@ -8,46 +8,50 @@
     kind: Job
     name: firefly-firefly-db-backup
     namespace: finance
-  register: job_status
+  register: firefly_db_job_status
   until: >
-    job_status.resources | length > 0 and
-    (job_status.resources[0].status.conditions | default([]) |
+    firefly_db_job_status.resources | length > 0 and
+    (firefly_db_job_status.resources[0].status.conditions | default([]) |
     selectattr('type', 'equalto', 'Complete') |
     selectattr('status', 'equalto', 'True') | list | length > 0)
   retries: 6
   delay: 5
 
-- name: "Copy dump from PVC to host"
-  when: pvc_folder_search.matched > 0
-  block:
+- name: "Find DB dumps in PVC"
+  become: true
+  register: firefly_db_pvc_dumps
+  ansible.builtin.find:
+    paths: "{{ firefly_db_pvc_folder_search.files[0].path }}"
+    file_type: "file"
+    recurse: false
 
-    - name: "Set variables"
-      ansible.builtin.set_fact:
-        firefly_backup_pvc_dump: "{{ pvc_folder_search.files[0].path }}/firefly.sql"
-        firefly_backup_host_dump: "{{ firefly_db_backup_directory }}/firefly_{{ ansible_facts.date_time.iso8601_basic_short }}.sql.enc"
+- name: "Find files in host backup directory"
+  register: firefly_db_host_dumps
+  ansible.builtin.find:
+    paths: "{{ firefly_db_backup_directory }}"
+    file_type: file
+    recurse: false
 
-    - name: "Encrypt DB dump"
-      # no_log: true
-      become: true
-      ansible.builtin.shell:
-        cmd: >-
-          openssl enc -aes-256-cbc -salt -pbkdf2
-          -in {{ firefly_backup_pvc_dump }}
-          -out {{ firefly_backup_host_dump }}
-          -pass "pass:{{ firefly_db_dump_encrypt_password }}"
+- name: "Copy dumps from PVC to host"
+  become: true
+  loop: "{{ firefly_db_pvc_dumps.files }}"
+  loop_control:
+    label: "{{ item.path }}"
+  ansible.builtin.copy:
+    src: "{{ item.path }}"
+    dest: "{{ firefly_db_backup_directory }}/{{ item.path | basename }}"
+    remote_src: true
+    mode: "0444"
 
-    - name: "Set permission for encrypted DB dump"
-      become: true
-      when: pvc_folder_search.matched > 0
-      ansible.builtin.file:
-        mode: "0644"
-        owner: "{{ ansible_facts.user_id }}"
-        path: "{{ firefly_backup_host_dump }}"
+- name: "Delete backup files in host not present in PVC"
+  loop: "{{ firefly_db_host_dumps.files }}"
+  loop_control:
+    label: "{{ item.path }}"
+  when: item.path | basename not in firefly_db_pvc_dumps.files | map(attribute='path') | map('basename') | list
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
 
-  always:
-    - name: "Delete plain DB dump"
-      become: true
-      ansible.builtin.file:
-        path: "{{ firefly_backup_pvc_dump }}"
-        state: "absent"
-        
+- name: "Sync backups to Google Drive"
+  changed_when: true
+  ansible.builtin.script: "rclone.sh -source {{ firefly_db_backup_directory }} -destination {{ firefly_db_rclone_remote }}"

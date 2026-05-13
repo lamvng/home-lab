@@ -2,22 +2,27 @@
 
 ## Overview
 
-- Hosting [Firefly III](https://github.com/firefly-iii/firefly-iii), a personal finance management app.
+The original requirement: an application to track spending, income, and savings, and assess financial health without sharing sensitive data with third parties.
+
+- Hosting [Firefly III](https://github.com/firefly-iii/firefly-iii), a personal finance management application, for daily use.
+  - Automating database backup and encryption to Google Drive.
 - Creating a Grafana dashboard for global spending/revenue analysis and financial health visibility.
-- Hosting a local LLM via Ollama, with agents to simplify interactions with Firefly:
+- Hosting open LLM models (Gemma 4 and Qwen 3.5) via Ollama, with agents to simplify interactions with Firefly:
   - Registering transactions using natural language.
   - Performing personal financial analysis.
 
 ## Technical Stack
 
-- Bare-metal setup is automated by Ansible.
-- K3s for Kubernetes distribution.
-- Argo CD for Kubernetes-related deployment.
-- Traefik with Gateway API for proxy.
-- Sealed Secrets for storing secrets on Git.
-- Grafana for visualization.
-- Cert Manager for certificate management.
-- Ollama for LLM hosting.
+- Bare-metal setup is automated by [Ansible](https://docs.ansible.com/).
+- [K3s](https://k3s.io/) as the Kubernetes distribution.
+- [Argo CD](https://argoproj.github.io/cd/) for GitOps Kubernetes deployments.
+- [Traefik](https://traefik.io/traefik) with [Gateway API](https://kubernetes.io/docs/concepts/services-networking/gateway/) for application proxy.
+- [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets) for storing secrets in Git.
+- [Grafana](https://grafana.com/) for visualization.
+- [Cert Manager](https://cert-manager.io/) for certificate management.
+- [rclone](https://rclone.org/) for database backup and encryption to Google Drive.
+- [Ollama](https://ollama.com/) for LLM hosting.
+- [Gemma 4](https://deepmind.google/models/gemma/gemma-4/) and [Qwen 3.5](https://qwen.ai/blog?id=qwen3.5) as the models used.
 
 ## Operational Context
 
@@ -27,6 +32,15 @@
 
 # Works
 
+- [x] Set up the bare-metal stack (prerequisite packages & K3s).
+- [x] Set up Argo CD.
+- [x] Set up Cert Manager.
+- [x] Install Firefly III stack.
+- [x] Migrate all financial history.
+- [x] Set up Ollama and test open LLM models.
+- [x] Make K3s see the GPU.
+- [x] Set up Grafana.
+- [x] Create a dashboard for financial insights.
 - [x] Fix a bug where K3s crashes at startup because of node IP changes.
 - [x] Migrate to Gateway API.
   - [ ] Migrate Ollama to Gateway API: Waiting for upstream MR https://github.com/otwld/ollama-helm/pull/249.
@@ -34,10 +48,9 @@
 - [x] Introduce UV as package manager.
 - [x] Use `kubernetes` module for related bootstrapping Ansible tasks.
 - [x] Introduce proper secret management.
-- [ ] Automate uploading backups to Google Drive.
-  - [ ] Idea: Fire a webhook to trigger the backup job to Google Drive.
+- [x] Automate uploading backups to Google Drive.
+- [ ] Create an AI agent to simplify Firefly transactions management.
 - [ ] Fix a bug where adding the user to the `k3s_admin` group requires logging out and logging back in to take effect, hence crashing the playbook.
-
 
 # Bootstrap
 
@@ -62,8 +75,6 @@ Set up dependencies:
 uv sync
 ```
 
-# On-demand commands or cron jobs
-
 Set up the laptop:
 
 ```shell
@@ -76,13 +87,31 @@ Set up the cluster:
 uv run ansible-playbook ansible/playbooks/bootstrap.yml --ask-become-pass
 ```
 
-Backup Firefly DB:
+Set up `rclone` for Google Drive. following [this tutorial](https://rclone.org/drive/#making-your-own-client-id).
+
+# Automated scripts
+
+## Regular scripts
+
+Start K3s and configure KUBECONFIG:
+
+```
+k3s-start.sh
+```
+
+Backup Firefly database to local disk and Google Drive, restore and test the backed up dump, and terminate K3s:
+
+```
+k3s-clean.sh
+```
+
+Backup Firefly DB on-demand. The command will also back up the most recent dumps on Google Drive.
 
 ```shell
 uv run ansible-playbook ansible/playbooks/firefly_db_backup_restore.yml --ask-become-pass --tags backup
 ```
 
-Restore Firefly DB:
+Restore Firefly DB on-demand. The command download the dumps from Google Drive and restore.
 
 ```shell
 uv run ansible-playbook ansible/playbooks/firefly_db_backup_restore.yml --ask-become-pass --tags restore

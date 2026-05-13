@@ -1,11 +1,3 @@
-- name: "Ensure encryption passwords match"
-  ansible.builtin.fail:
-    msg: "Passwords do not match"
-  when: firefly_db_dump_encrypt_password != firefly_db_dump_encrypt_password_2nd_try
-  tags:
-    - "backup"
-    - "never"
-
 - name: "Find the Firefly PVC host path"
   ansible.builtin.import_tasks: find_pvc.yml
   tags:

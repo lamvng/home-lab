@@ -1,2 +1,4 @@
 firefly_db_backup_directory: "{{ ansible_facts.env.HOME }}/firefly_backup"
 firefly_db_backup_k3s_pvc_directory: "/var/lib/rancher/k3s/storage"
+firefly_db_raw_dump: "firefly.sql"
+firefly_db_rclone_remote: "gdrive-crypt:"

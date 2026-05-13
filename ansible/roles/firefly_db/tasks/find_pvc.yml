@@ -9,17 +9,17 @@
     kind: "PersistentVolumeClaim"
     name: "firefly-firefly-db-backup-storage-claim"
     namespace: "finance"
-  register: "firefly_backup_pvc"
+  register: "firefly_db_backup_pvc"
 
 - name: "Find the host directory of the PVC"
   become: true
-  register: pvc_folder_search
+  register: firefly_db_pvc_folder_search
   ansible.builtin.find:
     file_type: "directory"
     paths: "{{ firefly_db_backup_k3s_pvc_directory }}"
-    patterns: "{{ firefly_backup_pvc.resources[0].spec.volumeName }}*"
-    recurse: no
+    patterns: "{{ firefly_db_backup_pvc.resources[0].spec.volumeName }}*"
+    recurse: false
 
 - name: "Output host directory of PVC"
   ansible.builtin.debug:
-    msg: "{{ pvc_folder_search.files | map(attribute='path') | list }}"
+    msg: "{{ firefly_db_pvc_folder_search.files | map(attribute='path') | list }}"

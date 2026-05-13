@@ -1,0 +1,20 @@
+- name: "Download rclone .deb package"
+  ansible.builtin.get_url:
+    url: "https://downloads.rclone.org/rclone-current-linux-amd64.deb"
+    dest: "/tmp/rclone-current-linux-amd64.deb"
+    mode: "0644"
+
+- name: "Install rclone"
+  become: true
+  ansible.builtin.apt:
+    deb: "/tmp/rclone-current-linux-amd64.deb"
+    state: "present"
+
+- name: "Create a script to sync DB backups before terminating K3s"
+  become: true
+  ansible.builtin.copy:
+    dest: "/usr/local/bin/k3s-clean.sh"
+    group: "{{ k3s_admin_group }}"
+    mode: "0755"
+    owner: "root"
+    src: "k3s-clean.sh"

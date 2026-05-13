@@ -15,3 +15,5 @@
       tags:
         - "sealed_secrets"
         - "never"
+    - role: "rclone"
+      tags: "rclone"

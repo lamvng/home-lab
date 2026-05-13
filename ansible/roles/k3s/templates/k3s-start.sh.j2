@@ -2,6 +2,8 @@
 
 set -euxo pipefail
 
+sudo -v
+
 i=0
 while ! systemctl is-active --quiet k3s.service; do
     i=$((i + 1))
@@ -9,14 +11,15 @@ while ! systemctl is-active --quiet k3s.service; do
         echo "Error: k3s.service failed to start after 10 attempts" >&2
         exit 1
     fi
-    systemctl start k3s.service
-    sleep 1
+    sudo systemctl start k3s.service
 done
 
 # Allow {{ k3s_admin_group }} group to read the K3s kubeconfig file
-current_group=$(stat -c '%G' {{ k3s_kubeconfig_location }})
-current_mode=$(stat -c '%a' {{ k3s_kubeconfig_location }})
+current_group=$(sudo stat -c '%G' {{ k3s_kubeconfig_location }})
+current_mode=$(sudo stat -c '%a' {{ k3s_kubeconfig_location }})
 if [[ "$current_group" != "{{ k3s_admin_group }}" || "$current_mode" != "640" ]]; then
-    chown root:{{ k3s_admin_group }} {{ k3s_kubeconfig_location }}
-    chmod 640 {{ k3s_kubeconfig_location }}
+    sudo chown root:{{ k3s_admin_group }} {{ k3s_kubeconfig_location }}
+    sudo chmod 640 {{ k3s_kubeconfig_location }}
 fi
+
+sudo -k

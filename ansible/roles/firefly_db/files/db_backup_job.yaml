@@ -24,7 +24,7 @@ spec:
               set -euxo pipefail
               pg_dump -h $DBHOST -p $DBPORT -U $DBUSER --format=p --clean -d $DBNAME > /var/lib/backup/$DBNAME.sql
               gzip -c /var/lib/backup/$DBNAME.sql > /var/lib/backup/$DBNAME-$(date -Is).sql.gz
-              ls -1t /var/lib/backup/$DBNAME-*.sql.gz | tail -n +15 | xargs -r rm --
+              ls -1t /var/lib/backup/$DBNAME-*.sql.gz | tail -n +6 | xargs -r rm --
           envFrom:
             - configMapRef:
                 name: firefly-firefly-db-config

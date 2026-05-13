@@ -1,70 +1,30 @@
-- name: "List all available backups"
-  failed_when: "firefly_backup_files.matched == 0"
-  register: "firefly_backup_files"
-  ansible.builtin.find:
-    age_stamp: "mtime"
-    file_type: "file"
-    paths: "{{ firefly_db_backup_directory }}"
+- name: "Sync backups from Google Drive"
+  changed_when: true
+  ansible.builtin.script: "rclone.sh -source {{ firefly_db_rclone_remote }} -destination {{ firefly_db_backup_directory }}"
 
-# If firefly_dump_name variable is provided via command line, use it. Otherwise pick the latest backup
-- name: "Set the selected dump"
-  ansible.builtin.set_fact:
-    firefly_selected_backup: >-
-      {{
-        firefly_dump_name if firefly_dump_name is defined and firefly_dump_name | length > 0
-        else (firefly_backup_files.files | sort(attribute='mtime', reverse=True) | first).path
-      }}
+- name: "Copy dumps from host to PVC"
+  become: true
+  ansible.builtin.copy:
+    src: "{{ firefly_db_backup_directory }}/{{ firefly_db_raw_dump }}"
+    dest: "{{ firefly_db_pvc_folder_search.files[0].path }}/{{ firefly_db_raw_dump }}"
+    remote_src: true
+    mode: "0444"
 
-- name: "Print the selected backups"
-  ansible.builtin.debug:
-    msg: "{{ firefly_selected_backup }}"
+- name: "Launch DB restore job"
+  kubernetes.core.k8s:
+    state: present
+    src: "{{ role_path }}/files/db_restore_job.yaml"
 
-- name: "Launch the restore"
-  when: pvc_folder_search.matched > 0
-  block:
-    - name: "Set variables"
-      ansible.builtin.set_fact:
-        firefly_backup_pvc_dump: "{{ pvc_folder_search.files[0].path }}/firefly.sql"
-
-    - name: "Decrypt DB dump"
-      become: true
-      no_log: true
-      ansible.builtin.shell:
-        cmd: >-
-          openssl enc -d -aes-256-cbc -pbkdf2
-          -in {{ firefly_selected_backup }}
-          -out {{ firefly_backup_pvc_dump }}
-          -pass "pass:{{ firefly_db_dump_encrypt_password }}"
-
-    - name: "Set permission for decrypted DB dump"
-      become: true
-      ansible.builtin.file:
-        mode: "0644"
-        owner: "{{ ansible_facts.user_id }}"
-        path: "{{ firefly_backup_pvc_dump }}"
-
-    - name: "Launch DB restore job"
-      kubernetes.core.k8s:
-        state: present
-        src: "{{ role_path }}/files/db_restore_job.yaml"
-
-    - name: "Wait for DB restore job to complete"
-      kubernetes.core.k8s_info:
-        kind: Job
-        name: firefly-firefly-db-restore
-        namespace: finance
-      register: job_status
-      until: >
-        job_status.resources | length > 0 and
-        (job_status.resources[0].status.conditions | default([]) |
-        selectattr('type', 'equalto', 'Complete') |
-        selectattr('status', 'equalto', 'True') | list | length > 0)
-      retries: 6
-      delay: 5
-
-  always:
-    - name: "Delete plain DB dump"
-      become: true
-      ansible.builtin.file:
-        path: "{{ firefly_backup_pvc_dump }}"
-        state: "absent"
+- name: "Wait for DB restore job to complete"
+  kubernetes.core.k8s_info:
+    kind: Job
+    name: firefly-firefly-db-restore
+    namespace: finance
+  register: firefly_db_job_status
+  until: >
+    firefly_db_job_status.resources | length > 0 and
+    (firefly_db_job_status.resources[0].status.conditions | default([]) |
+    selectattr('type', 'equalto', 'Complete') |
+    selectattr('status', 'equalto', 'True') | list | length > 0)
+  retries: 6
+  delay: 5

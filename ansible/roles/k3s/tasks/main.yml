@@ -113,7 +113,7 @@
 # https://docs.k3s.io/cluster-access
 # The kubeconfig file is re-generated each time the k3s service start, aka. when the computer starts.
 # Permission needed to be modified each time the host start.
-- name: "Create a script to allow {{ k3s_admin_group }} group read k3s config"
+- name: "Create a script to start K3s and allow {{ k3s_admin_group }} group read k3s config"
   become: true
   ansible.builtin.template:
     dest: "{{ k3s_start_script_location }}"
@@ -121,7 +121,6 @@
     mode: "0755"
     owner: "root"
     src: "{{ k3s_start_script_name }}.sh.j2"
-  tags: [script]
 
 - name: "Run the script to allow {{ k3s_admin_group }} group read k3s config"
   become: true
