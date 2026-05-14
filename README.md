@@ -6,7 +6,7 @@ The original requirement: an application to track spending, income, and savings,
 
 - Hosting [Firefly III](https://github.com/firefly-iii/firefly-iii), a personal finance management application, for daily use.
   - Automating database backup and encryption to Google Drive.
-- Creating a Grafana dashboard for global spending/revenue analysis and financial health visibility.
+- Creating a Grafana dashboard for global spending/revenue analysis and financial health visibility. See the dashboard on https://github.com/lamvng/firefly-iii-dashboard.
 - Hosting open LLM models (Gemma 4 and Qwen 3.5) via Ollama, with agents to simplify interactions with Firefly:
   - Registering transactions using natural language.
   - Performing personal financial analysis.
