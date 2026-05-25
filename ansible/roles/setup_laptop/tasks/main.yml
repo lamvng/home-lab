@@ -82,3 +82,17 @@
     marker: "# {mark} ANSIBLE MANAGED BLOCK: GIT"
     path: "{{ ansible_facts.env.HOME }}/.bashrc"
     prepend_newline: true
+
+- name: "Download DBeaver .deb package"
+  ansible.builtin.get_url:
+    url: "https://dbeaver.io/files/dbeaver-ce-latest-linux-x86_64.deb"
+    dest: "/tmp/dbeaver-ce-latest-linux-x86_64.deb"
+    mode: "0644"
+  tags: [dbeaver]
+
+- name: "Install DBeaver"
+  become: true
+  ansible.builtin.apt:
+    deb: "/tmp/dbeaver-ce-latest-linux-x86_64.deb"
+    state: "present"
+  tags: [dbeaver]

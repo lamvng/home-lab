@@ -58,7 +58,7 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: create-grafana-user
-          image: {{ .Values.customDbImage.image }}:{{ .Values.customDbImage.tag }}
+          image: {{ .Values.psqlClient.image }}:{{ .Values.psqlClient.tag }}
           imagePullPolicy: IfNotPresent
           command:
           - /bin/sh

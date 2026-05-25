@@ -1,0 +1,198 @@
+
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "backups.fullname" . }}-rclone-backup
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "backups.labels" . | nindent 4 }}
+spec:
+  suspend: true
+  schedule: "0 0 31 2 *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 5
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    metadata:
+      generateName: {{ include "backups.fullname" . }}-rclone-backup-
+      labels:
+        {{- include "backups.labels" . | nindent 8 }}
+    spec:
+      backoffLimit: 0
+      ttlSecondsAfterFinished: 300
+      template:
+        spec:
+          serviceAccountName: {{ include "backups.fullname" . }}
+          restartPolicy: Never
+          initContainers:
+            - name: firefly-db-dump
+              image: {{ .Values.psqlClient.image }}:{{ .Values.psqlClient.tag }}
+              imagePullPolicy: IfNotPresent
+              command:
+                - /bin/sh
+                - '-c'
+                - |-
+                  set -euxo pipefail
+                  pg_dump -h $DBHOST -p $DBPORT -U $DBUSER --format=p --clean -d $DBNAME > /var/lib/backup/$DBNAME.sql
+                  gzip -c /var/lib/backup/$DBNAME.sql > /var/lib/backup/$DBNAME-$(date -Is).sql.gz
+                  ls -1t /var/lib/backup/$DBNAME-*.sql.gz | tail -n +6 | xargs -r rm --
+              envFrom:
+                - configMapRef:
+                    name: {{ include "backups.fireflyConfigName" . }}
+              env:
+                - name: TZ
+                  value: Europe/Paris
+              volumeMounts:
+                - mountPath: /var/lib/backup
+                  name: backup-storage
+            - name: copy-rclone-config
+              image: {{ .Values.psqlClient.image }}:{{ .Values.psqlClient.tag }}
+              imagePullPolicy: IfNotPresent
+              command:
+                - /bin/sh
+                - -c
+                - cp /secret/rclone.conf /config/rclone/rclone.conf
+              volumeMounts:
+                - name: rclone-secret
+                  mountPath: /secret
+                  readOnly: true
+                - name: config
+                  mountPath: /config/rclone
+          containers:
+            - name: rclone-sync-google-drive
+              image: {{ .Values.rclone.image.name }}:{{ .Values.rclone.image.tag }}
+              imagePullPolicy: IfNotPresent
+              command:
+                - /bin/sh
+                - /scripts/rclone.sh
+              args:
+                - -source
+                - /data/firefly
+                - -destination
+                - gdrive-crypt:firefly
+              volumeMounts:
+                - name: config
+                  mountPath: /config/rclone
+                - name: data
+                  mountPath: /data/firefly
+                - name: scripts
+                  mountPath: /scripts
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumes:
+            - name: rclone-secret
+              secret:
+                secretName: {{ include "backups.rcloneConfigName" . }}
+            - name: config
+              emptyDir: {}
+            - name: data
+              persistentVolumeClaim:
+                claimName: {{ include "backups.fullname" . }}
+            - name: scripts
+              configMap:
+                name: {{ include "backups.rcloneScriptsName" . }}
+                defaultMode: 0755
+            - name: backup-storage
+              persistentVolumeClaim:
+                claimName: {{ include "backups.fullname" . }}
+
+---
+
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "backups.fullname" . }}-rclone-restore
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "backups.labels" . | nindent 8 }}
+spec:
+  suspend: true
+  schedule: "0 0 31 2 *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 5
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    metadata:
+      generateName: {{ include "backups.fullname" . }}-rclone-restore-
+      labels:
+        {{- include "backups.labels" . | nindent 12 }}
+    spec:
+      backoffLimit: 0
+      ttlSecondsAfterFinished: 300
+      template:
+        spec:
+          serviceAccountName: {{ include "backups.fullname" . }}
+          restartPolicy: Never
+          initContainers:
+            - name: copy-rclone-config
+              image: {{ .Values.psqlClient.image }}:{{ .Values.psqlClient.tag }}
+              imagePullPolicy: IfNotPresent
+              command:
+                - /bin/sh
+                - -c
+                - cp /secret/rclone.conf /config/rclone/rclone.conf
+              volumeMounts:
+                - name: rclone-secret
+                  mountPath: /secret
+                  readOnly: true
+                - name: config
+                  mountPath: /config/rclone
+            - name: rclone
+              image: {{ .Values.rclone.image.name }}:{{ .Values.rclone.image.tag }}
+              imagePullPolicy: IfNotPresent
+              command:
+                - /bin/sh
+                - /scripts/rclone.sh
+              args:
+                - -source
+                - gdrive-crypt:firefly
+                - -destination
+                - /data/firefly
+              volumeMounts:
+                - name: config
+                  mountPath: /config/rclone
+                - name: data
+                  mountPath: /data/firefly
+                - name: scripts
+                  mountPath: /scripts
+          containers:
+            - name: firefly-firefly-db-restore-job
+              image: {{ .Values.psqlClient.image }}:{{ .Values.psqlClient.tag }}
+              imagePullPolicy: IfNotPresent
+              command:
+                - /bin/sh
+                - -c
+                - |-
+                  set -euxo pipefail
+                  psql -h $DBHOST -p $DBPORT -U $DBUSER < /var/lib/backup/${DBNAME}.sql
+              envFrom:
+                - configMapRef:
+                    name: {{ include "backups.fireflyConfigName" . }}
+              env:
+                - name: TZ
+                  value: Europe/Paris
+              volumeMounts:
+                - mountPath: /var/lib/backup
+                  name: backup-storage
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumes:
+            - name: rclone-secret
+              secret:
+                secretName: {{ include "backups.rcloneConfigName" . }}
+            - name: config
+              emptyDir: {}
+            - name: data
+              persistentVolumeClaim:
+                claimName: {{ include "backups.fullname" . }}
+            - name: scripts
+              configMap:
+                name: {{ include "backups.rcloneScriptsName" . }}
+                defaultMode: 0755
+            - name: backup-storage
+              persistentVolumeClaim:
+                claimName: {{ include "backups.fullname" . }}

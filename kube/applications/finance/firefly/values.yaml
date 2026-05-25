@@ -27,7 +27,7 @@ httpRoute:
             type: PathPrefix
             value: /
 
-customDbImage:
+psqlClient:
   image: alpine/psql
   tag: 17.5
 

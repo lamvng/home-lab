@@ -122,6 +122,16 @@
     owner: "root"
     src: "{{ k3s_start_script_name }}.sh.j2"
 
+- name: "Create a script to sync backups and terminate K3s"
+  become: true
+  ansible.builtin.copy:
+    dest: "/usr/local/bin/k3s-clean.sh"
+    group: "{{ k3s_admin_group }}"
+    mode: "0755"
+    owner: "root"
+    src: "k3s-clean.sh"
+  tags: ["k3s-clean"]
+
 - name: "Run the script to allow {{ k3s_admin_group }} group read k3s config"
   become: true
   ansible.builtin.command: "{{ k3s_start_script_location }}"

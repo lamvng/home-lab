@@ -1,5 +1,5 @@
 sealed-secrets:
-  keyrenewperiod: "2160h"
+  keyrenewperiod: "4320h"
   resources:
     limits:
       cpu: 500m

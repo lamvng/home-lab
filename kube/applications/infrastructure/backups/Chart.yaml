@@ -1,0 +1,5 @@
+apiVersion: v2
+name: backups
+description: Back up and encrypt data to Google Drive
+type: application
+version: 1.0.0

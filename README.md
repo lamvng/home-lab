@@ -20,6 +20,7 @@ The original requirement: an application to track spending, income, and savings,
 - [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets) for storing secrets in Git.
 - [Grafana](https://grafana.com/) for visualization.
 - [Cert Manager](https://cert-manager.io/) for certificate management.
+- [Renovate](https://github.com/renovatebot/renovate) for depdendency updates.
 - [rclone](https://rclone.org/) for database backup and encryption to Google Drive.
 - [Ollama](https://ollama.com/) for LLM hosting.
 - [Gemma 4](https://deepmind.google/models/gemma/gemma-4/) and [Qwen 3.5](https://qwen.ai/blog?id=qwen3.5) as the models used.
@@ -48,7 +49,11 @@ The original requirement: an application to track spending, income, and savings,
 - [x] Introduce UV as package manager.
 - [x] Use `kubernetes` module for related bootstrapping Ansible tasks.
 - [x] Introduce proper secret management.
+  - [ ] Back up the Sealed Secrets private keys.
 - [x] Automate uploading backups to Google Drive.
+  - [x] Containerize `rclone`. See [Docker installation](https://rclone.org/install/#docker).
+- [ ] Set up network traffic controls.
+- [ ] Set up automated dependency updates.
 - [ ] Create an AI agent to simplify Firefly transactions management.
 - [ ] Fix a bug where adding the user to the `k3s_admin` group requires logging out and logging back in to take effect, hence crashing the playbook.
 
@@ -108,13 +113,17 @@ k3s-clean.sh
 Backup Firefly DB on-demand. The command will also back up the most recent dumps on Google Drive.
 
 ```shell
-uv run ansible-playbook ansible/playbooks/firefly_db_backup_restore.yml --ask-become-pass --tags backup
+BACKUP_JOB_NAME="backups-rclone-backup-$(date +%s)"
+kubectl -n infrastructure create job --from cronjob/backups-rclone-backup "$BACKUP_JOB_NAME"
+kubectl -n infrastructure wait job/"$BACKUP_JOB_NAME" --for=condition=complete --timeout=300s
 ```
 
 Restore Firefly DB on-demand. The command download the dumps from Google Drive and restore.
 
 ```shell
-uv run ansible-playbook ansible/playbooks/firefly_db_backup_restore.yml --ask-become-pass --tags restore
+RESTORE_JOB_NAME="backups-rclone-restore-$(date +%s)"
+kubectl -n infrastructure create job --from cronjob/backups-rclone-restore "$RESTORE_JOB_NAME"
+kubectl -n infrastructure wait job/"$RESTORE_JOB_NAME" --for=condition=complete --timeout=300s
 ```
 
 Remove K3S:

@@ -7,5 +7,4 @@ requires-python = ">=3.13.7"
 dependencies = [
     "ansible>=13.6.0",
     "ansible-lint>=26.4.0",
-    "kubernetes>=35.0.0",
 ]
