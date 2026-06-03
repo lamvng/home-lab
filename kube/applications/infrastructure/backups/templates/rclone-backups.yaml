@@ -25,17 +25,40 @@ spec:
           serviceAccountName: {{ include "backups.fullname" . }}
           restartPolicy: Never
           initContainers:
-            - name: firefly-db-dump
+            - name: init-data-folders
+              image: {{ .Values.busybox.image }}:{{ .Values.busybox.tag }}
+              imagePullPolicy: IfNotPresent
+              command:
+                - /bin/sh
+                - -c
+                - |-
+                  set -euxo pipefail
+                  mkdir -p /data/sealed-secrets
+                  mkdir -p /data/firefly
+              volumeMounts:
+                - name: data
+                  mountPath: /data
+            - name: dump-sealed-secrets-key
+              image: {{ .Values.kubectlClient.image }}:{{ .Values.kubectlClient.tag }}
+              imagePullPolicy: IfNotPresent
+              command:
+                - /bin/sh
+                - -c
+                - kubectl get secret -n {{ .Release.Namespace }} -l sealedsecrets.bitnami.com/sealed-secrets-key -o yaml > /data/sealed-secrets/keys
+              volumeMounts:
+                - name: data
+                  mountPath: /data
+            - name: dump-firefly-db
               image: {{ .Values.psqlClient.image }}:{{ .Values.psqlClient.tag }}
               imagePullPolicy: IfNotPresent
               command:
                 - /bin/sh
-                - '-c'
+                - -c
                 - |-
                   set -euxo pipefail
-                  pg_dump -h $DBHOST -p $DBPORT -U $DBUSER --format=p --clean -d $DBNAME > /var/lib/backup/$DBNAME.sql
-                  gzip -c /var/lib/backup/$DBNAME.sql > /var/lib/backup/$DBNAME-$(date -Is).sql.gz
-                  ls -1t /var/lib/backup/$DBNAME-*.sql.gz | tail -n +6 | xargs -r rm --
+                  pg_dump -h $DBHOST -p $DBPORT -U $DBUSER --format=p --clean -d $DBNAME > /data/firefly/$DBNAME.sql
+                  gzip -c /data/firefly/$DBNAME.sql > /data/firefly/$DBNAME-$(date -Is).sql.gz
+                  ls -1t /data/firefly/$DBNAME-*.sql.gz | tail -n +6 | xargs -r rm --
               envFrom:
                 - configMapRef:
                     name: {{ include "backups.fireflyConfigName" . }}
@@ -43,8 +66,8 @@ spec:
                 - name: TZ
                   value: Europe/Paris
               volumeMounts:
-                - mountPath: /var/lib/backup
-                  name: backup-storage
+                - mountPath: /data
+                  name: data
             - name: copy-rclone-config
               image: {{ .Values.psqlClient.image }}:{{ .Values.psqlClient.tag }}
               imagePullPolicy: IfNotPresent
@@ -59,22 +82,19 @@ spec:
                 - name: config
                   mountPath: /config/rclone
           containers:
-            - name: rclone-sync-google-drive
+            - name: rclone-sync-to-google-drive
               image: {{ .Values.rclone.image.name }}:{{ .Values.rclone.image.tag }}
               imagePullPolicy: IfNotPresent
-              command:
-                - /bin/sh
-                - /scripts/rclone.sh
+              command: ["/bin/sh", "-c"]
               args:
-                - -source
-                - /data/firefly
-                - -destination
-                - gdrive-crypt:firefly
+                - |
+                  /scripts/rclone.sh -source /data/firefly -destination gdrive-crypt:
+                  /scripts/rclone.sh -source /data/sealed-secrets -destination gdrive:homelab-backup/sealed-secrets
               volumeMounts:
                 - name: config
                   mountPath: /config/rclone
                 - name: data
-                  mountPath: /data/firefly
+                  mountPath: /data
                 - name: scripts
                   mountPath: /scripts
           {{- with .Values.resources }}
@@ -94,9 +114,6 @@ spec:
               configMap:
                 name: {{ include "backups.rcloneScriptsName" . }}
                 defaultMode: 0755
-            - name: backup-storage
-              persistentVolumeClaim:
-                claimName: {{ include "backups.fullname" . }}
 
 ---
 
@@ -139,26 +156,23 @@ spec:
                   readOnly: true
                 - name: config
                   mountPath: /config/rclone
-            - name: rclone
+            - name: rclone-sync-from-google-drive
               image: {{ .Values.rclone.image.name }}:{{ .Values.rclone.image.tag }}
               imagePullPolicy: IfNotPresent
-              command:
-                - /bin/sh
-                - /scripts/rclone.sh
+              command: ["/bin/sh", "-c"]
               args:
-                - -source
-                - gdrive-crypt:firefly
-                - -destination
-                - /data/firefly
+                - |
+                  /scripts/rclone.sh -source gdrive-crypt: -destination /data/firefly
+                  /scripts/rclone.sh -source gdrive:homelab-backup/sealed-secrets -destination /data/sealed-secrets 
               volumeMounts:
                 - name: config
                   mountPath: /config/rclone
                 - name: data
-                  mountPath: /data/firefly
+                  mountPath: /data
                 - name: scripts
                   mountPath: /scripts
           containers:
-            - name: firefly-firefly-db-restore-job
+            - name: restore-firefly-db
               image: {{ .Values.psqlClient.image }}:{{ .Values.psqlClient.tag }}
               imagePullPolicy: IfNotPresent
               command:
@@ -166,7 +180,7 @@ spec:
                 - -c
                 - |-
                   set -euxo pipefail
-                  psql -h $DBHOST -p $DBPORT -U $DBUSER < /var/lib/backup/${DBNAME}.sql
+                  psql -h $DBHOST -p $DBPORT -U $DBUSER < /data/firefly/${DBNAME}.sql
               envFrom:
                 - configMapRef:
                     name: {{ include "backups.fireflyConfigName" . }}
@@ -174,8 +188,8 @@ spec:
                 - name: TZ
                   value: Europe/Paris
               volumeMounts:
-                - mountPath: /var/lib/backup
-                  name: backup-storage
+                - mountPath: /data
+                  name: data
           {{- with .Values.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
@@ -193,6 +207,3 @@ spec:
               configMap:
                 name: {{ include "backups.rcloneScriptsName" . }}
                 defaultMode: 0755
-            - name: backup-storage
-              persistentVolumeClaim:
-                claimName: {{ include "backups.fullname" . }}

@@ -49,11 +49,11 @@ The original requirement: an application to track spending, income, and savings,
 - [x] Introduce UV as package manager.
 - [x] Use `kubernetes` module for related bootstrapping Ansible tasks.
 - [x] Introduce proper secret management.
-  - [ ] Back up the Sealed Secrets private keys.
+  - [x] Back up the Sealed Secrets private keys.
 - [x] Automate uploading backups to Google Drive.
   - [x] Containerize `rclone`. See [Docker installation](https://rclone.org/install/#docker).
-- [ ] Set up network traffic controls.
 - [ ] Set up automated dependency updates.
+- [ ] Set up network traffic controls.
 - [ ] Create an AI agent to simplify Firefly transactions management.
 - [ ] Fix a bug where adding the user to the `k3s_admin` group requires logging out and logging back in to take effect, hence crashing the playbook.
 

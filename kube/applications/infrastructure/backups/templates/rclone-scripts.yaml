@@ -7,7 +7,7 @@ metadata:
     {{- include "backups.labels" . | nindent 8 }}
 data:
   rclone.sh: |
-    #!/usr/bin/env bash
+    #!/usr/bin/env sh
     while [[ $# -gt 0 ]]; do
         case "$1" in
             -source) SOURCE="$2"; shift 2 ;;
