@@ -9,6 +9,7 @@
     enabled: false
     masked: true
     state: "stopped"
+  tags: ["system"]
 
 - name: "Disable Bluetooth auto enable"
   become: true
@@ -21,6 +22,7 @@
     no_extra_spaces: true
     backup: true
     mode: "644"
+  tags: ["system"]
 
 - name: "Install Apt programs"
   become: true
@@ -36,6 +38,7 @@
   ansible.builtin.apt:
     name: "{{ item }}"
     state: "present"
+  tags: ["apt"]
 
 - name: Install Snap packages
   become: true
@@ -45,12 +48,14 @@
   community.general.snap:
     name: "{{ item }}"
     state: "present"
+  tags: ["snap"]
 
 - name: "Enable UFW firewall"
   become: true
   community.general.ufw:
     logging: "off"
     state: "enabled"
+  tags: ["ufw"]
 
 - name: "Link Terminator"
   become: true
@@ -59,18 +64,21 @@
     link: "/usr/bin/x-terminal-emulator"
     path: "/usr/bin/terminator"
     priority: 50
+  tags: ["terminator"]
 
 - name: "Make Terminator default terminal"
   community.general.dconf:
     key: "/org/gnome/desktop/applications/terminal/exec"
     value: "'terminator'"
     state: "present"
+  tags: ["terminator"]
 
 - name: "Set terminal execution argument"
   community.general.dconf:
     key: "/org/gnome/desktop/applications/terminal/exec-arg"
     value: "'-x'"
     state: "present"
+  tags: ["terminator"]
 
 - name: "Enable git bash completion"
   ansible.builtin.blockinfile:
@@ -82,6 +90,7 @@
     marker: "# {mark} ANSIBLE MANAGED BLOCK: GIT"
     path: "{{ ansible_facts.env.HOME }}/.bashrc"
     prepend_newline: true
+  tags: ["autocomplete"]
 
 - name: "Download DBeaver .deb package"
   ansible.builtin.get_url:
@@ -96,3 +105,66 @@
     deb: "/tmp/dbeaver-ce-latest-linux-x86_64.deb"
     state: "present"
   tags: [dbeaver]
+
+- name: "Install Terraform dependencies"
+  become: true
+  ansible.builtin.apt:
+    name:
+      - gnupg
+      - software-properties-common
+    state: present
+    update_cache: true
+  tags: ["terraform"]
+
+- name: "Download HashiCorp GPG key"
+  ansible.builtin.get_url:
+    url: https://apt.releases.hashicorp.com/gpg
+    dest: /tmp/hashicorp.gpg
+    mode: "0644"
+  tags: ["terraform"]
+
+- name: "Dearmor and install GPG key"
+  become: true
+  ansible.builtin.shell:
+    cmd: gpg --dearmor < /tmp/hashicorp.gpg > /usr/share/keyrings/hashicorp-archive-keyring.gpg
+    creates: /usr/share/keyrings/hashicorp-archive-keyring.gpg
+  tags: ["terraform"]
+
+- name: Add HashiCorp apt repository
+  become: true
+  ansible.builtin.shell:
+    cmd: |
+      echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list
+    creates: /etc/apt/sources.list.d/hashicorp.list
+  tags: ["terraform"]
+
+- name: Install Terraform
+  become: true
+  ansible.builtin.apt:
+    name: terraform
+    state: present
+    update_cache: true
+  tags: ["terraform"]
+
+- name: Download and dearmor Google Cloud GPG key
+  become: true
+  ansible.builtin.shell:
+    cmd: curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
+    creates: /usr/share/keyrings/cloud.google.gpg
+  tags: ["gcloud"]
+
+- name: Add Google Cloud SDK apt repository
+  become: true
+  ansible.builtin.shell:
+    cmd: |
+      echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+    creates: /etc/apt/sources.list.d/google-cloud-sdk.list
+  tags: ["gcloud"]
+
+- name: Install Google Cloud CLI
+  become: true
+  ansible.builtin.apt:
+    name: google-cloud-cli
+    state: present
+    update_cache: true
+  tags: ["gcloud"]
