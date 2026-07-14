@@ -131,3 +131,41 @@ Remove K3S:
 ```shell
 uv run ansible-playbook ansible/playbooks/remove_k3s.yml --ask-become-pass
 ```
+
+# Disaster recovery
+
+Bootstrap the stack following [Bootsrap](#Bootstrap) section.
+
+Get the `sealed-secrets` key name:
+
+```shell
+kubectl get secret -n infrastructure | grep "^sealed-secrets-key"
+```
+
+Apply the sealed-secret primary key:
+
+```shell
+ktl apply -f keys
+```
+
+Restart the `sealed-secrets` deployment:
+
+```
+ktl -n infrastructure rollout restart deployment sealed-secrets
+```
+
+Restart the failed ArgoCD apps in any order.
+
+Run the restore command in [Regular scripts](#Regular-scripts) section. Verify that the job completes successfully.
+
+Verify that all Firefly data are restored.
+
+Reset Grafana admin password:
+
+```shell
+POD=$(ktl get pods -n monitoring -o name | grep grafana | head -1 | cut -d/ -f2)
+ ktl exec -n monitoring -it "$POD" -- grafana cli admin reset-admin-password '<new-password>'
+```
+
+Delete the other generated `seal-secrets` primary key.
+
