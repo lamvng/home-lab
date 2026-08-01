@@ -52,6 +52,7 @@ The original requirement: an application to track spending, income, and savings,
   - [x] Back up the Sealed Secrets private keys.
 - [x] Automate uploading backups to Google Drive.
   - [x] Containerize `rclone`. See [Docker installation](https://rclone.org/install/#docker).
+- [ ] Document installing `nvm` and `node`.
 - [ ] Set up automated dependency updates.
 - [ ] Set up network traffic controls.
 - [ ] Create an AI agent to simplify Firefly transactions management.
@@ -168,4 +169,3 @@ POD=$(ktl get pods -n monitoring -o name | grep grafana | head -1 | cut -d/ -f2)
 ```
 
 Delete the other generated `seal-secrets` primary key.
-

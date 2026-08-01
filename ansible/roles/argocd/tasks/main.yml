@@ -18,23 +18,23 @@
     path: "/etc/hosts"
     prepend_newline: true
 
-# TODO: BUG here
-# - name: Wait for ArgoCD server to be ready
-#   loop:
-#     - "{{ argocd_name }}-server"
-#     - "{{ argocd_name }}-repo-server"
-#   kubernetes.core.k8s_info:
-#     api_version: "apps/v1"
-#     kind: "Deployment"
-#     name: "{{ item }}"
-#     namespace: "{{ argocd_name }}"
-#   register: "argocd_deploy"
-#   retries: 50
-#   delay: 5
-#   until:
-#     - argocd_deploy.resources | length > 0
-#     - argocd_deploy.resources[0].status.availableReplicas is defined
-#     - argocd_deploy.resources[0].status.availableReplicas > 0
+- name: "Wait for ArgoCD server to be ready"
+  loop:
+    - "server"
+    - "repo-server"
+  kubernetes.core.k8s_info:
+    api_version: "apps/v1"
+    kind: "Deployment"
+    namespace: "{{ argocd_name }}"
+    label_selectors:
+      - "app.kubernetes.io/component={{ item }}"
+  register: "argocd_deploy"
+  retries: 50
+  delay: 5
+  until:
+    - argocd_deploy.resources | length > 0
+    - argocd_deploy.resources[0].status.availableReplicas is defined
+    - argocd_deploy.resources[0].status.availableReplicas > 0
 
 - name: "Deploy root app"
   kubernetes.core.k8s:

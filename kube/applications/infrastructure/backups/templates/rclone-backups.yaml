@@ -97,10 +97,10 @@ spec:
                   mountPath: /data
                 - name: scripts
                   mountPath: /scripts
-          {{- with .Values.resources }}
-          resources:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
+              {{- with .Values.resources }}
+              resources:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
           volumes:
             - name: rclone-secret
               secret:
@@ -190,10 +190,10 @@ spec:
               volumeMounts:
                 - mountPath: /data
                   name: data
-          {{- with .Values.resources }}
-          resources:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
+              {{- with .Values.resources }}
+              resources:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
           volumes:
             - name: rclone-secret
               secret:

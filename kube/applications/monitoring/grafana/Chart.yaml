@@ -5,5 +5,5 @@ description: Better graphs and visualization for Firefly III
 type: application
 dependencies:
   - name: grafana
-    version: "12.3.0"
+    version: "12.10.1"
     repository: oci://ghcr.io/grafana-community/helm-charts
