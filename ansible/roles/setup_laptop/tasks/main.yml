@@ -183,3 +183,62 @@
       nvm alias default {{ setup_laptop_node_version }}
     executable: /bin/bash
   tags: ["nvm"]
+
+# https://www.tug.org/texlive/quickinstall.html
+- name: "Install TeX Live dependencies"
+  become: true
+  ansible.builtin.apt:
+    name:
+      - perl
+      - libwww-perl
+    state: "present"
+  tags: ["texlive"]
+
+- name: "Download TeX Live installer"
+  ansible.builtin.get_url:
+    checksum: "sha512:https://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz.sha512"
+    dest: "/tmp/install-tl-unx.tar.gz"
+    mode: "0644"
+    url: "https://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz"
+  tags: ["texlive"]
+
+- name: "Create TeX Live installer directory"
+  ansible.builtin.file:
+    mode: "0755"
+    path: "/tmp/install-tl"
+    state: "directory"
+  tags: ["texlive"]
+
+# Tarball unpacks to install-tl-YYYYMMDD, strip it for a deterministic script path
+- name: "Unpack TeX Live installer"
+  ansible.builtin.unarchive:
+    dest: "/tmp/install-tl"
+    extra_opts: ["--strip-components=1"]
+    remote_src: true
+    src: "/tmp/install-tl-unx.tar.gz"
+  tags: ["texlive"]
+
+- name: "Install TeX Live"
+  become: true
+  ansible.builtin.command:
+    cmd: >-
+      perl /tmp/install-tl/install-tl
+      --no-interaction
+      --scheme={{ setup_laptop_texlive_scheme }}
+      --no-doc-install
+      --no-src-install
+      --texdir={{ setup_laptop_texlive_texdir }}
+    creates: "{{ setup_laptop_texlive_bin_dir }}/tlmgr"
+  tags: ["texlive"]
+
+- name: "Add TeX Live to PATH"
+  ansible.builtin.blockinfile:
+    append_newline: true
+    block: |
+      # Set TeX Live binaries on PATH
+      export PATH="{{ setup_laptop_texlive_bin_dir }}:$PATH"
+    insertafter: EOF
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: TEXLIVE"
+    path: "{{ ansible_facts.env.HOME }}/.bashrc"
+    prepend_newline: true
+  tags: ["texlive"]

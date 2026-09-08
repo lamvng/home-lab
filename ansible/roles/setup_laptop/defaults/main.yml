@@ -1,1 +1,6 @@
 setup_laptop_node_version: "24"
+
+setup_laptop_texlive_version: "2026"
+setup_laptop_texlive_scheme: "small"
+setup_laptop_texlive_texdir: "/usr/local/texlive/{{ setup_laptop_texlive_version }}"
+setup_laptop_texlive_bin_dir: "{{ setup_laptop_texlive_texdir }}/bin/{{ ansible_facts.architecture }}-linux"
