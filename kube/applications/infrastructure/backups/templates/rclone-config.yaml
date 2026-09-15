@@ -1,0 +1,17 @@
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: {{ include "backups.rcloneConfigName" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "backups.labels" . | nindent 4 }}
+spec:
+  encryptedData:
+    rclone.conf: {{ .Values.rclone.config }}
+  template:
+    type: Opaque
+    metadata:
+      name: {{ include "backups.rcloneConfigName" . }}
+      namespace: {{ .Release.Namespace }}
+      labels:
+        {{- include "backups.labels" . | nindent 8 }}

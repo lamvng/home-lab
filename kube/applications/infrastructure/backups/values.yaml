@@ -1,0 +1,41 @@
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+pvc:
+  accessMode: ReadWriteOnce
+  size: 1Gi
+
+serviceAccount:
+  annotations: {}
+
+rclone:
+  config: AgB1HwkhnbjSeoxw4V67jMarJVI1hSC1PtzCl6beXa4O0KTzCDzUCTV/psvxfjMuS0lQcnF/3BNHwH8wEr8hqY09cxJjHk5C3rFhfQDLnjY1uIvHd3jeOtN/SQvbY+NJ5LrlXFp1e6rIoS4+IKchDcP3akWshRFR7acsSR3+AwR9YArH4QlsCD7+uVjD3Z20g0PSb9SmYtio3u9+t+pUBkmOXGVBH+8cfjO7k0uBWheI9+LwJPdEvCEl6OQi66AhooTy9HGXLX9YgB5KCc3Lbnyw8NZfVQFv8YbYn7cY0wavfzirHTD/VUl0is/LjcaLuD+jgw62pxnNPdsCwD/tVyuV86oENGB5xeBTNB4B3sYYEGlquCBm9LDgyJFPCnBg9FqVAcdKbtDZZv2bh/4MY3ouq/lxMCcH5OisNnCsaeiI9IL4kufOkiROKM8LqlAyXxbIPq2tiVJ/wFvtAaPeIOiekms4dgvsTGfIdr0A9CA1j2RIQYy6VsrcsTPmV3zgHR48sGG1S4GptcA/ul4HeAlG60QWTCNdsjGWQQ42UtiSeJnXJV9jaFwmheRqhqikeEsZPWeM8xs+wLGhQOPKLSPkZiRtUwear9Yk27y40a8F/TBfEhyThx5J4UiGO+pYjQ4+05T8kn8LO2V2pF/R8CTbTeGNPYulgv2IBwiPWCg0TJIycZuyrVs360SFo05bOqtk4EZxQWBeb3hCyJ+fc5z+6fkXlVcxGlRT9IIAeHFWyldX7JMA+WtxVlaxGpHwUnQQDYUJtAmHcJ+Bqv58Fnymvi22eUCtZy2N8ZRGBsqaPe7/aeGag3AtwNyryPmxYoG2uOSOLYutoaWU07iqFpeEhCmb9wl2Je5jSqaWQQdeQGhjzgm8RBfcd8qX/dN2nVFnsem9AsZb/sqYPI6PLJrGtHFDQ6YgTkcw9p6kFLeHRddaAHBqYO8FaeVxRgIzXOj0GjhVNBXXDvwxrKP3ssd/oJmbEv9jrt2/74qJrBv/0F6om6+1XcOKIH712jJg64DycZwuEVBudmSW4eHCUmC84X4p+HL3IYKYtMVTNuEEwT0m41QKQbg5QFpQUgPRxjo/dAWPd2pyOc3QHEfuyIsRTPzF3/sIL/lPjbmty69eHqSW9ahPvPMtLS5uruxYXHneSQ9ChllTOLE++ZT32qqPoQb+85HO2EII1tWXnYLzlzijPEpI6WUV0eSZ5wYX2LwJv42+/qyls/LxjHkpvvGAjk4VYKnTCJuRV20DJVtLTYG5T2SxdIE+AJAK8Xa0g5OEFASBWAe5NonogVqvsgDv8kYSNikwqT6IlUCXep4lGPJMFM32CDcRoimGH66tSxb7WTGsVlQ9JP6kLQVqPgXj77pWCuSBR761HeHxMAAcADvod3TF5E4fy/r7Q6meyfoREjN5DZkKRO0Rdwd0soZY9fTe4vDELK0l/sImgcG6BbS236kxRB+ksrCdDGCbljNQL8hU+LJlv5PbXt/J36gpVUEQjTcET00eIsIjU1ckw+v/zd/CPTLBmO4F46P0TQZ97jvLqxWQ4S1YXsnJWKhU5tcNH6CmvQxQxYMglHV3Zk7UuA3UFug1E/giJtxZ2ULjJnerLHffyZeRzZq/Mk3T9ePIbVxtrlgOuSxbvmLAo9QlW4F/N1YOhmabFzWTrnyPYynaeHFWsQ+lnknJAhaT9oZSlkmoR4dx2DmaIcZjqz4fRi69Te8rfA2dJeDX4Fs1Ri7sU2kUonthsGfVDl1DcA1xFLO5yijEDQMQqkAhW8fOvyDAUENjcGnNvv5XNn3z5eimJ+sjEeDC/ZV1KJc79xEjZItkYXuxn6wvQv+zJn+L3ULibb47Eb2N5A==
+  image:
+    name: rclone/rclone
+    tag: 1.74.2
+
+firefly:
+  db_config:
+    DBHOST: firefly-firefly-db.finance
+    DBNAME: firefly
+    DBPORT: "5432"
+    DBUSER: firefly
+    POSTGRES_HOST_AUTH_METHOD: trust
+    POSTGRES_USER: firefly
+
+psqlClient:
+  image: alpine/psql
+  tag: 17.5
+
+kubectlClient:
+  image: alpine/kubectl
+  tag: 1.36.1
+
+busybox:
+  image: busybox
+  tag: 1.38.0

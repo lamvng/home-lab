@@ -1,0 +1,61 @@
+grafana:
+  persistence:
+    enabled: true
+    size: 5Gi
+
+  resources:
+    requests:
+      cpu: 150m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  env:
+    GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+    GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES: "false"
+    GF_ANALYTICS_REPORTING_ENABLED: "false"
+    GF_SERVER_ROOT_URL: "https://grafana.homelab.me"
+
+  envValueFrom:
+    GRAFANA_PSQL_USER:
+      secretKeyRef:
+        name: firefly-grafana
+        key: GRAFANA_USER
+    GRAFANA_PSQL_PASSWORD:
+      secretKeyRef:
+        name: firefly-grafana
+        key: GRAFANA_PASSWORD
+
+  route:
+    main:
+      enabled: true
+      hostnames:
+        - grafana.homelab.me
+      parentRefs:
+        - group: gateway.networking.k8s.io
+          kind: Gateway
+          name: gateway-api
+          namespace: infrastructure
+          sectionName: https
+
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: firefly
+          uid: firefly-postgres
+          type: postgres
+          url: firefly-firefly-db.finance.svc.cluster.local:5432
+          user: $GRAFANA_PSQL_USER
+          secureJsonData:
+            password: $GRAFANA_PSQL_PASSWORD
+          jsonData:
+            database: firefly
+            sslmode: "disable"
+            maxOpenConns: 3
+            maxIdleConns: 1
+            maxIdleConnsAuto: true
+            connMaxLifetime: 900
+            postgresVersion: 1500
+            timescaledb: false

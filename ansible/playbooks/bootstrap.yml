@@ -1,0 +1,17 @@
+- name: Bootstrap the lab
+  hosts: "localhost"
+  roles:
+    - role: "k8s_utilities"
+      tags: "k8s_utilities"
+    - role: "k3s"
+      tags: "k3s"
+    - role: "argocd"
+      tags: "argocd"
+    - role: "firefly_bootstrap"
+      tags: "firefly_bootstrap"
+    - role: "ollama_bootstrap"
+      tags: "ollama_bootstrap"
+    - role: "sealed_secrets"
+      tags: "sealed_secrets"
+    - role: "rclone"
+      tags: "rclone"

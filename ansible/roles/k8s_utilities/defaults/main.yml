@@ -1,0 +1,10 @@
+helm_version: "v4.1.1"
+kubecolor_version: "0.5.3"
+kubectl_version: "v1.35.1"
+k9s_version: "v0.50.18"
+
+kubectl_binary_tmp_path: "/tmp/kubectl"
+kubectl_binary_path: "/usr/local/bin/kubectl"
+kubectl_sha256_path: "/tmp/kubectl.sha256"
+
+k9s_deb_path: "/tmp/k9s_linux_amd64.deb"

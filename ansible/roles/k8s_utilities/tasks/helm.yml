@@ -1,0 +1,27 @@
+
+- name: "Download and unpack Helm binary"
+  ansible.builtin.unarchive:
+    dest: /tmp
+    remote_src: yes
+    src: "https://get.helm.sh/helm-{{ helm_version }}-linux-amd64.tar.gz"
+    extra_opts: [ "--strip-components=1" ]
+
+- name: "Install helm binary"
+  become: true
+  ansible.builtin.copy:
+    src: "/tmp/helm"
+    dest: "/usr/local/bin/helm"
+    mode: "0755"
+    owner: "root"
+    group: "root"
+
+- name: "Enable helm bash completion"
+  ansible.builtin.blockinfile:
+    append_newline: true
+    block: |
+      # Set helm autocompletion
+      source <(helm completion bash)
+    insertafter: EOF
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: HELM"
+    path: "{{ ansible_facts.env.HOME }}/.bashrc"
+    prepend_newline: true

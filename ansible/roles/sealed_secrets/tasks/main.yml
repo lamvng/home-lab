@@ -1,0 +1,28 @@
+- name: "Download kubeseal archive"
+  ansible.builtin.get_url:
+    url: "https://github.com/bitnami-labs/sealed-secrets/releases/download/v{{ sealed_secrets_version }}/kubeseal-{{ sealed_secrets_version }}-linux-amd64.tar.gz"
+    dest: /tmp/kubeseal-{{ sealed_secrets_version }}-linux-amd64.tar.gz
+
+- name: "Extract kubeseal binary"
+  ansible.builtin.unarchive:
+    src: "/tmp/kubeseal-{{ sealed_secrets_version }}-linux-amd64.tar.gz"
+    dest: "/tmp"
+    include:
+      - "kubeseal"
+    remote_src: true
+
+- name: "Install kubeseal binary"
+  become: true
+  ansible.builtin.copy:
+    src: "/tmp/kubeseal"
+    dest: "/usr/local/bin/kubeseal"
+    mode: "0755"
+    remote_src: true
+
+- name: "Fetch public key"
+  changed_when: false
+  ansible.builtin.command:
+    cmd: >-
+      kubeseal --fetch-cert
+      --controller-name=sealed-secrets
+      --controller-namespace=infrastructure

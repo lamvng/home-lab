@@ -1,0 +1,16 @@
+- name: "k3s killall"
+  become: true
+  ansible.builtin.command: "k3s-killall.sh"
+
+- name: "k3s uninstall"
+  become: true
+  ansible.builtin.command: "k3s-uninstall.sh"
+
+- name: "Remove data"
+  become: true
+  loop:
+    - "/etc/rancher"
+    - "/var/lib/rancher"
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: "absent"

@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: home-lab
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - git:
+        repoURL: file:///opt/repos/home-lab
+        revision: develop
+        directories:
+          - path: kube/applications/*/*
+          - path: kube/applications/*-excluded/*
+            exclude: true
+          - path: kube/applications/*/*-excluded
+            exclude: true
+  template:
+    metadata:
+      name: '{{.path.basename}}'
+    spec:
+      project: default
+      source:
+        repoURL: file:///opt/repos/home-lab
+        targetRevision: develop
+        path: '{{.path.path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{index .path.segments 2}}'
+      syncPolicy:
+        retry:
+          refresh: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
+        automated:
+          prune: true
+          selfHeal: false

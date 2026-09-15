@@ -1,0 +1,9 @@
+apiVersion: v2
+version: 1.0.0
+name: sealed-secrets
+description: Encrypted secrets on Git
+type: application
+dependencies:
+  - name: sealed-secrets
+    version: "2.19.1"
+    repository: https://bitnami.github.io/sealed-secrets

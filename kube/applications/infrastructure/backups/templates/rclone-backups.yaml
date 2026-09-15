@@ -1,0 +1,209 @@
+
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "backups.fullname" . }}-rclone-backup
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "backups.labels" . | nindent 4 }}
+spec:
+  suspend: true
+  schedule: "0 0 31 2 *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 5
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    metadata:
+      generateName: {{ include "backups.fullname" . }}-rclone-backup-
+      labels:
+        {{- include "backups.labels" . | nindent 8 }}
+    spec:
+      backoffLimit: 0
+      ttlSecondsAfterFinished: 300
+      template:
+        spec:
+          serviceAccountName: {{ include "backups.fullname" . }}
+          restartPolicy: Never
+          initContainers:
+            - name: init-data-folders
+              image: {{ .Values.busybox.image }}:{{ .Values.busybox.tag }}
+              imagePullPolicy: IfNotPresent
+              command:
+                - /bin/sh
+                - -c
+                - |-
+                  set -euxo pipefail
+                  mkdir -p /data/sealed-secrets
+                  mkdir -p /data/firefly
+              volumeMounts:
+                - name: data
+                  mountPath: /data
+            - name: dump-sealed-secrets-key
+              image: {{ .Values.kubectlClient.image }}:{{ .Values.kubectlClient.tag }}
+              imagePullPolicy: IfNotPresent
+              command:
+                - /bin/sh
+                - -c
+                - kubectl get secret -n {{ .Release.Namespace }} -l sealedsecrets.bitnami.com/sealed-secrets-key -o yaml > /data/sealed-secrets/keys
+              volumeMounts:
+                - name: data
+                  mountPath: /data
+            - name: dump-firefly-db
+              image: {{ .Values.psqlClient.image }}:{{ .Values.psqlClient.tag }}
+              imagePullPolicy: IfNotPresent
+              command:
+                - /bin/sh
+                - -c
+                - |-
+                  set -euxo pipefail
+                  pg_dump -h $DBHOST -p $DBPORT -U $DBUSER --format=p --clean -d $DBNAME > /data/firefly/$DBNAME.sql
+                  gzip -c /data/firefly/$DBNAME.sql > /data/firefly/$DBNAME-$(date -Is).sql.gz
+                  ls -1t /data/firefly/$DBNAME-*.sql.gz | tail -n +6 | xargs -r rm --
+              envFrom:
+                - configMapRef:
+                    name: {{ include "backups.fireflyConfigName" . }}
+              env:
+                - name: TZ
+                  value: Europe/Paris
+              volumeMounts:
+                - mountPath: /data
+                  name: data
+            - name: copy-rclone-config
+              image: {{ .Values.psqlClient.image }}:{{ .Values.psqlClient.tag }}
+              imagePullPolicy: IfNotPresent
+              command:
+                - /bin/sh
+                - -c
+                - cp /secret/rclone.conf /config/rclone/rclone.conf
+              volumeMounts:
+                - name: rclone-secret
+                  mountPath: /secret
+                  readOnly: true
+                - name: config
+                  mountPath: /config/rclone
+          containers:
+            - name: rclone-sync-to-google-drive
+              image: {{ .Values.rclone.image.name }}:{{ .Values.rclone.image.tag }}
+              imagePullPolicy: IfNotPresent
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  /scripts/rclone.sh -source /data/firefly -destination gdrive-crypt:
+                  /scripts/rclone.sh -source /data/sealed-secrets -destination gdrive:homelab-backup/sealed-secrets
+              volumeMounts:
+                - name: config
+                  mountPath: /config/rclone
+                - name: data
+                  mountPath: /data
+                - name: scripts
+                  mountPath: /scripts
+              {{- with .Values.resources }}
+              resources:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+          volumes:
+            - name: rclone-secret
+              secret:
+                secretName: {{ include "backups.rcloneConfigName" . }}
+            - name: config
+              emptyDir: {}
+            - name: data
+              persistentVolumeClaim:
+                claimName: {{ include "backups.fullname" . }}
+            - name: scripts
+              configMap:
+                name: {{ include "backups.rcloneScriptsName" . }}
+                defaultMode: 0755
+
+---
+
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "backups.fullname" . }}-rclone-restore
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "backups.labels" . | nindent 8 }}
+spec:
+  suspend: true
+  schedule: "0 0 31 2 *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 5
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    metadata:
+      generateName: {{ include "backups.fullname" . }}-rclone-restore-
+      labels:
+        {{- include "backups.labels" . | nindent 12 }}
+    spec:
+      backoffLimit: 0
+      ttlSecondsAfterFinished: 300
+      template:
+        spec:
+          serviceAccountName: {{ include "backups.fullname" . }}
+          restartPolicy: Never
+          initContainers:
+            - name: copy-rclone-config
+              image: {{ .Values.psqlClient.image }}:{{ .Values.psqlClient.tag }}
+              imagePullPolicy: IfNotPresent
+              command:
+                - /bin/sh
+                - -c
+                - cp /secret/rclone.conf /config/rclone/rclone.conf
+              volumeMounts:
+                - name: rclone-secret
+                  mountPath: /secret
+                  readOnly: true
+                - name: config
+                  mountPath: /config/rclone
+            - name: rclone-sync-from-google-drive
+              image: {{ .Values.rclone.image.name }}:{{ .Values.rclone.image.tag }}
+              imagePullPolicy: IfNotPresent
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  /scripts/rclone.sh -source gdrive-crypt: -destination /data/firefly
+                  /scripts/rclone.sh -source gdrive:homelab-backup/sealed-secrets -destination /data/sealed-secrets 
+              volumeMounts:
+                - name: config
+                  mountPath: /config/rclone
+                - name: data
+                  mountPath: /data
+                - name: scripts
+                  mountPath: /scripts
+          containers:
+            - name: restore-firefly-db
+              image: {{ .Values.psqlClient.image }}:{{ .Values.psqlClient.tag }}
+              imagePullPolicy: IfNotPresent
+              command:
+                - /bin/sh
+                - -c
+                - |-
+                  set -euxo pipefail
+                  psql -h $DBHOST -p $DBPORT -U $DBUSER < /data/firefly/${DBNAME}.sql
+              envFrom:
+                - configMapRef:
+                    name: {{ include "backups.fireflyConfigName" . }}
+              env:
+                - name: TZ
+                  value: Europe/Paris
+              volumeMounts:
+                - mountPath: /data
+                  name: data
+              {{- with .Values.resources }}
+              resources:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+          volumes:
+            - name: rclone-secret
+              secret:
+                secretName: {{ include "backups.rcloneConfigName" . }}
+            - name: config
+              emptyDir: {}
+            - name: data
+              persistentVolumeClaim:
+                claimName: {{ include "backups.fullname" . }}
+            - name: scripts
+              configMap:
+                name: {{ include "backups.rcloneScriptsName" . }}
+                defaultMode: 0755

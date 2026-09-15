@@ -1,0 +1,97 @@
+{{- define "firefly.grafana-secret-name" -}}
+{{ include "firefly-iii.fullname" . }}-grafana
+{{- end -}}
+{{- /*
+Duplicate the Grafana DB user so that Grafana on another namespace can use.
+*/}}
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: {{ include "firefly.grafana-secret-name" . }}
+  namespace: {{ .Values.grafanaUser.grafana_namespace }}
+spec:
+  encryptedData:
+    GRAFANA_USER: {{ .Values.grafanaUser.grafana_namespace_user }}
+    GRAFANA_PASSWORD: {{ .Values.grafanaUser.grafana_namespace_password }}
+  template:
+    type: Opaque
+    metadata:
+      name: {{ include "firefly.grafana-secret-name" . }}
+      namespace: {{ .Values.grafanaUser.grafana_namespace }}
+      labels:
+        {{- include "firefly-iii.labels" . | nindent 8 }}
+
+---
+
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: {{ include "firefly.grafana-secret-name" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  encryptedData:
+    GRAFANA_USER: {{ .Values.grafanaUser.firefly_namespace_user }}
+    GRAFANA_PASSWORD: {{ .Values.grafanaUser.firefly_namespace_password }}
+  template:
+    type: Opaque
+    metadata:
+      name: {{ include "firefly.grafana-secret-name" . }}
+      namespace: {{ .Release.Namespace }}
+      labels:
+        {{- include "firefly-iii.labels" . | nindent 8 }}
+
+---
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "firefly-iii.fullname" . }}-create-grafana-db-user
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "firefly-iii.labels" . | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: create-grafana-user
+          image: {{ .Values.psqlClient.image }}:{{ .Values.psqlClient.tag }}
+          imagePullPolicy: IfNotPresent
+          command:
+          - /bin/sh
+          - -c
+          - |
+            set -euo pipefail
+
+              psql -h "$DBHOST" -p "$DBPORT" -U "$DBUSER" -d "$DBNAME" <<EOF
+              DO \$\$
+              BEGIN
+                  IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '$GRAFANA_USER') THEN
+                      CREATE ROLE "$GRAFANA_USER" WITH LOGIN PASSWORD '$GRAFANA_PASSWORD';
+                  ELSE
+                      ALTER ROLE "$GRAFANA_USER" WITH PASSWORD '$GRAFANA_PASSWORD';
+                  END IF;
+              END
+              \$\$;
+
+              GRANT CONNECT ON DATABASE "$DBNAME" TO "$GRAFANA_USER";
+              GRANT USAGE ON SCHEMA public TO "$GRAFANA_USER";
+              GRANT SELECT ON ALL TABLES IN SCHEMA public TO "$GRAFANA_USER";
+              ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO "$GRAFANA_USER";
+              EOF
+
+              echo "User $GRAFANA_USER processed successfully."
+          env:
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: firefly-firefly-iii
+                  key: DB_PASSWORD
+          envFrom:
+            - configMapRef:
+                name: firefly-firefly-db-config
+            - secretRef:
+                name: {{ include "firefly.grafana-secret-name" . }}

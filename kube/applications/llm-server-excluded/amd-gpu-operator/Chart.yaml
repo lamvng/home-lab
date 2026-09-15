@@ -1,0 +1,9 @@
+apiVersion: v2
+version: 1.0.0
+name: amd-gpu
+description: AMD GPU operator so that the node can detect GPU
+type: application
+dependencies:
+  - name: amd-gpu
+    version: "0.21.0"
+    repository: https://rocm.github.io/k8s-device-plugin

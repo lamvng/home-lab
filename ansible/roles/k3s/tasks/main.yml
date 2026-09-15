@@ -1,0 +1,148 @@
+- name: "Download k3s install script"
+  ansible.builtin.get_url:
+    dest: "{{ k3s_install_script_location }}"
+    mode: "0755"
+    url: "https://get.k3s.io"
+
+# Fix the problem where K3S crashes after the laptop restarts
+# https://dev.to/shankar_t/my-k3s-pi-cluster-died-after-a-reboot-a-troubleshooting-war-story-m93
+# https://stackoverflow.com/questions/66449289/is-there-any-way-to-bind-k3s-flannel-to-another-interface
+- name: "Configure dummy interface for K3S"
+  become: true
+  block:
+    - name: "Load dummy kernel module"
+      community.general.modprobe:
+        name: "dummy"
+        persistent: "present"
+        state: "present"
+
+    - name: "Create dummy interface"
+      register: dummy_netdev
+      ansible.builtin.copy:
+        dest: "/etc/systemd/network/25-{{ k3s_interface_name }}.netdev"
+        content: |-
+          [NetDev]
+          Name={{ k3s_interface_name }}
+          Kind=dummy
+
+    - name: "Assign IP to dummy interface"
+      register: dummy_network
+      ansible.builtin.copy:
+        dest: "/etc/systemd/network/25-{{ k3s_interface_name }}.network"
+        content: |-
+          [Match]
+          Name={{ k3s_interface_name }}
+
+          [Network]
+          Address={{ k3s_node_ip }}
+
+    - name: "Restart systemd-networkd"
+      when: dummy_netdev.changed or dummy_network.changed
+      ansible.builtin.systemd:
+        name: "systemd-networkd"
+        enabled: yes
+        state: "restarted"
+
+- name: "Install k3s"
+  become: true
+  ansible.builtin.shell:
+    cmd: "{{ k3s_install_script_location }}"
+  environment:
+    INSTALL_K3S_VERSION: "{{ k3s_version }}"
+    INSTALL_K3S_EXEC: >-
+      --node-ip={{ k3s_node_ip }}
+      --flannel-iface={{ k3s_interface_name }}
+      --tls-san={{ k3s_node_ip }}
+      --bind-address={{ k3s_node_ip }}
+      --advertise-address={{ k3s_node_ip }}
+      --secrets-encryption
+
+- name: "Populate service facts"
+  ansible.builtin.service_facts:
+
+# https://docs.k3s.io/installation/requirements?os=debian#operating-systems
+- name: Add firewall rules for ufw
+  become: true
+  when: ansible_facts.services['ufw.service'].status == "enabled"
+  block:
+
+    - name: "Allow Kubernetes API server"
+      community.general.ufw:
+        rule: "allow"
+        port: "6443"
+        proto: "tcp"
+
+    - name: "Allow traffic from pods"
+      community.general.ufw:
+        rule: "allow"
+        src: "10.42.0.0/16"
+
+    - name: "Allow traffic from services"
+      community.general.ufw:
+        rule: "allow"
+        src: "10.43.0.0/16"
+
+- name: "Copy custom Traefik config"
+  become: true
+  ansible.builtin.copy:
+    dest: "/var/lib/rancher/k3s/server/manifests/traefik-custom.yaml"
+    mode: "0600"
+    src: "traefik-custom.yaml"
+  tags:
+    - "traefik"
+
+- name: "Disable k3s at startup"
+  become: true
+  ansible.builtin.systemd_service:
+    enabled: false
+    name: "k3s"
+
+- name: "Create {{ k3s_admin_group }} group"
+  become: true
+  ansible.builtin.group:
+    name: "{{ k3s_admin_group }}"
+    state: "present"
+
+- name: "Add {{ ansible_facts.user_id }} user to {{ k3s_admin_group }} group"
+  become: true
+  ansible.builtin.user:
+    append: true
+    groups: ["{{ k3s_admin_group }}"]
+    name: "{{ ansible_facts.user_id }}"
+
+# https://docs.k3s.io/cluster-access
+# The kubeconfig file is re-generated each time the k3s service start, aka. when the computer starts.
+# Permission needed to be modified each time the host start.
+- name: "Create a script to start K3s and allow {{ k3s_admin_group }} group read k3s config"
+  become: true
+  ansible.builtin.template:
+    dest: "{{ k3s_start_script_location }}"
+    group: "{{ k3s_admin_group }}"
+    mode: "0755"
+    owner: "root"
+    src: "{{ k3s_start_script_name }}.sh.j2"
+
+- name: "Create a script to sync backups and terminate K3s"
+  become: true
+  ansible.builtin.copy:
+    dest: "/usr/local/bin/k3s-clean.sh"
+    group: "{{ k3s_admin_group }}"
+    mode: "0755"
+    owner: "root"
+    src: "k3s-clean.sh"
+  tags: ["k3s-clean"]
+
+- name: "Run the script to allow {{ k3s_admin_group }} group read k3s config"
+  become: true
+  ansible.builtin.command: "{{ k3s_start_script_location }}"
+
+- name: "Modify environment to include KUBECONFIG"
+  ansible.builtin.blockinfile:
+    append_newline: true
+    block: |
+      # Set KUBECONFIG for k3s
+      export KUBECONFIG={{ k3s_kubeconfig_location }}
+    insertafter: EOF
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: KUBECONFIG"
+    path: "{{ ansible_facts.env.HOME }}/.bashrc"
+    prepend_newline: true
